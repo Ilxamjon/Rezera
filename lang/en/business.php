@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'member_already_exists' => 'This user is already a member of this business.',
+    'cannot_change_owner_role' => 'Owner role cannot be changed through this endpoint.',
+    'ownership_transfer_not_supported' => 'Ownership transfer is not supported yet.',
+    'cannot_remove_last_owner' => 'Cannot remove the last owner of this business.',
+    'coordinates_pair_required' => 'Latitude and longitude must be provided together.',
+    'invalid_closed_day' => 'Closed days cannot have opening hours.',
+    'invalid_24h_day' => '24-hour days cannot have specific open/close times.',
+    'opens_closes_required' => 'Open and close times are required for scheduled days.',
+    'created' => 'Business created successfully.',
+    'updated' => 'Business updated successfully.',
+    'member_added' => 'Member added successfully.',
+    'member_updated' => 'Member updated successfully.',
+    'member_removed' => 'Member removed successfully.',
+    'cannot_invite_owner' => 'Owner role cannot be assigned through invitations.',
+    'invitation_already_pending' => 'An invitation for this phone number is already pending.',
+    'invitation_sent' => 'Staff invitation sent successfully.',
+    'invitation_revoked' => 'Invitation revoked successfully.',
+    'invitation_accepted' => 'You have joined the business team.',
+    'invitation_declined' => 'Invitation declined.',
+    'invitation_not_for_user' => 'This invitation is not for your account.',
+    'invitation_not_pending' => 'This invitation is no longer pending.',
+    'working_hours_updated' => 'Working hours updated successfully.',
+];
