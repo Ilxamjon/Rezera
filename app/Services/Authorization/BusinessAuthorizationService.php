@@ -134,7 +134,7 @@ class BusinessAuthorizationService
         }
 
         if ($member->member_role === BusinessMemberRole::Owner) {
-            return false;
+            return $this->hasRole($user, $businessId, BusinessMemberRole::Owner);
         }
 
         if ($member->member_role === BusinessMemberRole::Manager) {

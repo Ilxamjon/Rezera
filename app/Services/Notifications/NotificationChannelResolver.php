@@ -6,6 +6,7 @@ use App\Contracts\Notifications\PushNotificationProviderInterface;
 use App\Contracts\Notifications\SmsProviderInterface;
 use App\Contracts\Notifications\TelegramNotificationProviderInterface;
 use App\Domain\Notifications\Enums\NotificationChannel;
+use App\Services\Notifications\Providers\FcmPushNotificationProvider;
 use App\Services\Notifications\Providers\MockPushNotificationProvider;
 use App\Services\Notifications\Providers\MockSmsProvider;
 use App\Services\Notifications\Providers\MockTelegramProvider;
@@ -15,7 +16,7 @@ final class NotificationChannelResolver
     public function pushProvider(): PushNotificationProviderInterface
     {
         return match (config('notifications.providers.push.driver', 'mock')) {
-            'mock' => app(MockPushNotificationProvider::class),
+            'fcm' => app(FcmPushNotificationProvider::class),
             default => app(MockPushNotificationProvider::class),
         };
     }

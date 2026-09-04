@@ -7,21 +7,23 @@ use App\Domain\Businesses\Enums\BusinessStatus;
 use App\Domain\Identity\Enums\PlatformRole;
 use App\Domain\Promotions\Enums\DiscountType;
 use App\Domain\Promotions\Enums\PromoRedemptionStatus;
-use App\Domain\Reservations\Enums\ReservationStatus;
 use App\Domain\Resources\Enums\ResourceStatus;
 use App\Models\Business;
 use App\Models\BusinessMember;
 use App\Models\PromoCode;
 use App\Models\Resource;
 use App\Models\User;
+use App\Services\Promotions\PromoCodeValidator;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use Tests\PostgresTestCase;
+use Tests\Support\AssignsBusinessSubscription;
 use Tests\Support\AuthenticatesUsers;
 use Tests\Support\SeedsBusinessHours;
 
 class PromoCodeTest extends PostgresTestCase
 {
+    use AssignsBusinessSubscription;
     use AuthenticatesUsers;
     use SeedsBusinessHours;
 
@@ -300,7 +302,7 @@ class PromoCodeTest extends PostgresTestCase
 
     public function test_percentage_discount_respects_maximum_cap(): void
     {
-        $validator = app(\App\Services\Promotions\PromoCodeValidator::class);
+        $validator = app(PromoCodeValidator::class);
         $promo = PromoCode::factory()->make([
             'discount_type' => DiscountType::Percentage,
             'discount_value' => 20,
@@ -312,7 +314,7 @@ class PromoCodeTest extends PostgresTestCase
 
     public function test_fixed_discount_cannot_exceed_subtotal(): void
     {
-        $validator = app(\App\Services\Promotions\PromoCodeValidator::class);
+        $validator = app(PromoCodeValidator::class);
         $promo = PromoCode::factory()->make([
             'discount_type' => DiscountType::Fixed,
             'discount_value' => 100_000,
@@ -430,7 +432,7 @@ class PromoCodeTest extends PostgresTestCase
     }
 
     /**
-     * @return array{0: Business, 1: Resource}
+     * @return array{0: Business, 1: resource}
      */
     private function bookableBusiness(array $hours = ['opens_at' => '10:00', 'closes_at' => '02:00']): array
     {
@@ -449,6 +451,8 @@ class PromoCodeTest extends PostgresTestCase
 
         $this->seedBusinessHours($business, $schedule);
 
+        $this->assignProSubscription($business);
+
         $resource = Resource::factory()->create([
             'business_id' => $business->id,
             'status' => ResourceStatus::Active,
@@ -460,7 +464,7 @@ class PromoCodeTest extends PostgresTestCase
     }
 
     /**
-     * @return array{0: Business, 1: Resource, 2: User, 3?: User}
+     * @return array{0: Business, 1: resource, 2: User, 3?: User}
      */
     private function bookableBusinessWithOwner(bool $includeStaff = false): array
     {

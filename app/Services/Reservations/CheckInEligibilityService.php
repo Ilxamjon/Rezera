@@ -2,16 +2,14 @@
 
 namespace App\Services\Reservations;
 
-use App\Domain\Reservations\Enums\ReservationOperationalStatus;
-use App\Domain\Reservations\Enums\ReservationSessionStatus;
 use App\Domain\Reservations\Enums\ReservationStatus;
 use App\Models\Reservation;
 use Carbon\CarbonImmutable;
+use Illuminate\Validation\ValidationException;
 
 final class CheckInEligibilityService
 {
     public function __construct(
-        private readonly ReservationOperationalStatusResolver $operationalStatus,
         private readonly EffectiveReservationSettingsResolver $settingsResolver,
     ) {}
 
@@ -77,7 +75,7 @@ final class CheckInEligibilityService
         $result = $this->evaluate($reservation);
 
         if (! $result['eligible']) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'reservation' => [__('reservations.check_in.'.$result['reason'])],
             ]);
         }

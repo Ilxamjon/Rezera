@@ -279,7 +279,7 @@ class ReviewApiTest extends PostgresTestCase
 
         $this->getJson('/api/v1/businesses/'.$business->id)
             ->assertOk()
-            ->assertJsonPath('data.rating.average', 5.0)
+            ->assertJsonPath('data.rating.average', 5)
             ->assertJsonPath('data.rating.count', 1);
     }
 
@@ -311,9 +311,13 @@ class ReviewApiTest extends PostgresTestCase
         DB::disableQueryLog();
 
         $response
-            ->assertOk()
-            ->assertJsonPath('data.items.0.rating.count', 3)
-            ->assertJsonPath('data.items.0.rating.average', 4.0);
+            ->assertOk();
+
+        $item = collect($response->json('data.items'))->firstWhere('id', $business->id);
+
+        $this->assertNotNull($item);
+        $this->assertSame(3, $item['rating']['count']);
+        $this->assertEquals(4, $item['rating']['average']);
 
         $this->assertLessThanOrEqual(8, count($queries));
     }
@@ -456,7 +460,7 @@ class ReviewApiTest extends PostgresTestCase
         $this->getJson('/api/v1/businesses/'.$business->id.'/reviews')
             ->assertOk()
             ->assertJsonPath('data.rating.count', 1)
-            ->assertJsonPath('data.rating.average', 5.0)
+            ->assertJsonPath('data.rating.average', 5)
             ->assertJsonPath('data.rating.distribution.5', 1);
     }
 }

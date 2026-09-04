@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api\V1\Auth;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\PostgresTestCase;
 use Tests\Support\AuthenticatesUsers;
@@ -27,6 +28,8 @@ class LogoutTest extends PostgresTestCase
         $response->assertOk()->assertJsonPath('success', true);
 
         $this->assertSame(1, PersonalAccessToken::query()->where('tokenable_id', $user->id)->count());
+
+        Auth::forgetGuards();
 
         $this->getJson('/api/v1/auth/me', [
             'Authorization' => 'Bearer '.$token,

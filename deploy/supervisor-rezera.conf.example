@@ -1,0 +1,18 @@
+; Supervisor programs for Rezera queue + (optional) horizon-less worker
+; Copy to /etc/supervisor/conf.d/rezera.conf and adjust user/paths.
+
+[program:rezera-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/rezera/artisan queue:work redis --sleep=1 --tries=3 --timeout=120 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/var/www/rezera/storage/logs/worker.log
+stopwaitsecs=3600
+
+; Cron still required for the scheduler:
+; * * * * * www-data cd /var/www/rezera && php artisan schedule:run >> /dev/null 2>&1

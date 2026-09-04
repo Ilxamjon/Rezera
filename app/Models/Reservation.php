@@ -2,26 +2,24 @@
 
 namespace App\Models;
 
-use App\Domain\Reservations\Enums\CheckInMethod;
 use App\Domain\Reservations\Enums\CancelledByActorType;
+use App\Domain\Reservations\Enums\CheckInMethod;
 use App\Domain\Reservations\Enums\ConfirmationMode;
 use App\Domain\Reservations\Enums\PaymentMethod;
 use App\Domain\Reservations\Enums\PaymentStatus;
 use App\Domain\Reservations\Enums\ReservationStatus;
-use App\Models\Payment;
-use App\Models\PromoCode;
-use App\Models\PromoCodeRedemption;
-use App\Models\Review;
 use App\Support\Reservations\OccupancyRange;
+use Database\Factories\ReservationFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Reservation extends Model
 {
-    /** @use HasFactory<\Database\Factories\ReservationFactory> */
+    /** @use HasFactory<ReservationFactory> */
     use HasFactory, HasUuids;
 
     protected $fillable = [
@@ -63,6 +61,7 @@ class Reservation extends Model
         'check_out_method',
         'completed_at',
         'confirmed_at',
+        'cancelled_at',
         'no_show_at',
         'expires_at',
         'idempotency_key',
@@ -128,7 +127,7 @@ class Reservation extends Model
         return $this->hasMany(Payment::class);
     }
 
-    public function review(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function review(): HasOne
     {
         return $this->hasOne(Review::class);
     }
@@ -138,7 +137,7 @@ class Reservation extends Model
         return $this->belongsTo(PromoCode::class);
     }
 
-    public function promoRedemption(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function promoRedemption(): HasOne
     {
         return $this->hasOne(PromoCodeRedemption::class);
     }
@@ -148,14 +147,14 @@ class Reservation extends Model
         return $this->hasMany(ReservationSession::class);
     }
 
-    public function activeSession(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function activeSession(): HasOne
     {
         return $this->hasOne(ReservationSession::class)->where('status', 'active');
     }
 
-    public function latestSession(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function latestSession(): HasOne
     {
-        return $this->hasOne(ReservationSession::class)->latestOfMany();
+        return $this->hasOne(ReservationSession::class)->latest('created_at');
     }
 
     public function checkedInBy(): BelongsTo

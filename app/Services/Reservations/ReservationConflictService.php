@@ -39,8 +39,8 @@ final class ReservationConflictService
         int $bufferMinutes,
         ?string $ignoreReservationId = null,
     ): bool {
-        $intervalStart = CarbonInterface::instance($startAt)->utc();
-        $intervalEnd = CarbonInterface::instance($endAt)->utc()->addMinutes($bufferMinutes);
+        $intervalStart = $startAt->utc();
+        $intervalEnd = $endAt->utc()->addMinutes($bufferMinutes);
 
         $query = Reservation::query()
             ->where('resource_id', $resourceId)

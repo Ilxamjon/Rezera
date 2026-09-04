@@ -7,24 +7,24 @@ use App\Http\Controllers\Api\V1\Manage\BusinessDashboardController;
 use App\Http\Controllers\Api\V1\Manage\BusinessManagementController;
 use App\Http\Controllers\Api\V1\Manage\BusinessMemberController;
 use App\Http\Controllers\Api\V1\Manage\BusinessMemberInvitationController;
-use App\Http\Controllers\Api\V1\Manage\BusinessStaffController;
 use App\Http\Controllers\Api\V1\Manage\BusinessOnboardingController;
 use App\Http\Controllers\Api\V1\Manage\BusinessReadinessController;
+use App\Http\Controllers\Api\V1\Manage\BusinessStaffController;
 use App\Http\Controllers\Api\V1\Manage\BusinessSubscriptionController;
 use App\Http\Controllers\Api\V1\Manage\BusinessVerificationController;
 use App\Http\Controllers\Api\V1\Manage\BusinessWorkingHoursController;
-use App\Http\Controllers\Api\V1\Manage\PricingRuleController as ManagePricingRuleController;
-use App\Http\Controllers\Api\V1\Manage\PromoCodeController as ManagePromoCodeController;
 use App\Http\Controllers\Api\V1\Manage\LoyaltyProgramController as ManageLoyaltyProgramController;
 use App\Http\Controllers\Api\V1\Manage\LoyaltyRewardController as ManageLoyaltyRewardController;
 use App\Http\Controllers\Api\V1\Manage\PaymentController as ManagePaymentController;
-use App\Http\Controllers\Api\V1\Manage\ReservationSettingsController;
-use App\Http\Controllers\Api\V1\Manage\ReservationController as ManageReservationController;
+use App\Http\Controllers\Api\V1\Manage\PricingRuleController as ManagePricingRuleController;
+use App\Http\Controllers\Api\V1\Manage\PromoCodeController as ManagePromoCodeController;
 use App\Http\Controllers\Api\V1\Manage\ReservationCheckInController as ManageReservationCheckInController;
-use App\Http\Controllers\Api\V1\Manage\ResourceQrController;
-use App\Http\Controllers\Api\V1\Manage\ReviewController as ManageReviewController;
+use App\Http\Controllers\Api\V1\Manage\ReservationController as ManageReservationController;
+use App\Http\Controllers\Api\V1\Manage\ReservationSettingsController;
 use App\Http\Controllers\Api\V1\Manage\ResourceCategoryController;
 use App\Http\Controllers\Api\V1\Manage\ResourceController;
+use App\Http\Controllers\Api\V1\Manage\ResourceQrController;
+use App\Http\Controllers\Api\V1\Manage\ReviewController as ManageReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')
@@ -105,6 +105,9 @@ Route::middleware('auth:sanctum')
 
         Route::post('/businesses/{business}/resources', [ResourceController::class, 'store'])
             ->name('businesses.resources.store');
+
+        Route::get('/businesses/{business}/resources/occupancy', [ManageReservationCheckInController::class, 'resourceOccupancy'])
+            ->name('businesses.resources.occupancy');
 
         Route::get('/businesses/{business}/resources/{resource}', [ResourceController::class, 'show'])
             ->name('businesses.resources.show');
@@ -192,9 +195,6 @@ Route::middleware('auth:sanctum')
 
         Route::get('/businesses/{business}/sessions/active', [ManageReservationCheckInController::class, 'activeSessions'])
             ->name('businesses.sessions.active');
-
-        Route::get('/businesses/{business}/resources/occupancy', [ManageReservationCheckInController::class, 'resourceOccupancy'])
-            ->name('businesses.resources.occupancy');
 
         Route::get('/businesses/{business}/resources/{resource}/qr', [ResourceQrController::class, 'show'])
             ->name('businesses.resources.qr.show');

@@ -277,7 +277,7 @@ Not implemented in foundation prompt.
 - Channel: `stack` → `single` file (`storage/logs/laravel.log`)
 - Log database errors without exposing SQL to clients
 - Never log passwords or bearer tokens
-- **Future:** Sentry/Bugsnag integration point in exception renderer
+- **Sentry:** `sentry/sentry-laravel` installed; set `SENTRY_LARAVEL_DSN` to enable (no-op when empty)
 
 ---
 

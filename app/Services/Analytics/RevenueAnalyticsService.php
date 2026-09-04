@@ -49,12 +49,16 @@ final class RevenueAnalyticsService
             ->selectRaw('status, count(*) as total, coalesce(sum(amount), 0) as amount')
             ->groupBy('status')
             ->get()
-            ->mapWithKeys(fn ($row) => [
-                $row->status => [
-                    'count' => (int) $row->total,
-                    'amount' => (int) $row->amount,
-                ],
-            ])
+            ->mapWithKeys(function ($row): array {
+                $status = $row->status instanceof \BackedEnum ? $row->status->value : (string) $row->status;
+
+                return [
+                    $status => [
+                        'count' => (int) $row->total,
+                        'amount' => (int) $row->amount,
+                    ],
+                ];
+            })
             ->all();
 
         $net = (int) ($reservationAgg->net ?? 0);

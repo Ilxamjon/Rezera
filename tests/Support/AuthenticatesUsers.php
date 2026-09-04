@@ -3,6 +3,7 @@
 namespace Tests\Support;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 trait AuthenticatesUsers
 {
@@ -13,6 +14,8 @@ trait AuthenticatesUsers
 
     protected function authHeaders(User $user, string $deviceName = 'test-device'): array
     {
+        Auth::forgetGuards();
+
         return [
             'Authorization' => 'Bearer '.$this->issueToken($user, $deviceName),
             'Accept' => 'application/json',

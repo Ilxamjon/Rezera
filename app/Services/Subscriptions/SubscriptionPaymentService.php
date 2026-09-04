@@ -44,7 +44,7 @@ final class SubscriptionPaymentService
             $payment = Payment::query()->create([
                 'business_id' => $business->id,
                 'reservation_id' => null,
-                'business_subscription_id' => null,
+                'business_subscription_id' => $intent['previous_subscription_id'] ?? null,
                 'user_id' => $payer->id,
                 'payment_number' => app(PaymentNumberGenerator::class)->generate(),
                 'provider' => $provider,

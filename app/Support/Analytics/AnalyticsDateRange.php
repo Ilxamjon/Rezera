@@ -107,7 +107,7 @@ final class AnalyticsDateRange
 
     public function previousPeriod(): self
     {
-        $days = $this->fromLocal->startOfDay()->diffInDays($this->toLocal->startOfDay()) + 1;
+        $days = (int) ($this->fromLocal->startOfDay()->diffInDays($this->toLocal->startOfDay()) + 1);
         $previousEnd = $this->fromLocal->subDay()->endOfDay();
         $previousStart = $previousEnd->subDays($days - 1)->startOfDay();
 

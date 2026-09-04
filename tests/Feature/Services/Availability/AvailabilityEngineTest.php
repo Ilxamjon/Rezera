@@ -81,6 +81,8 @@ class AvailabilityEngineTest extends PostgresTestCase
 
     public function test_request_outside_working_hours_is_unavailable(): void
     {
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-04 08:00:00', 'Asia/Tashkent'));
+
         $business = $this->createBusinessWithHours(opens: '10:00', closes: '02:00', overnight: true);
         $this->createResource($business, 'PC #01');
 
@@ -102,6 +104,8 @@ class AvailabilityEngineTest extends PostgresTestCase
 
     public function test_overnight_request_beyond_closing_is_unavailable(): void
     {
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-04 00:30:00', 'Asia/Tashkent'));
+
         $business = $this->createBusinessWithHours(opens: '18:00', closes: '02:00', overnight: true);
         $this->createResource($business, 'PC #01');
 

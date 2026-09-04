@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Api\V1\SavedSearch;
 
 use App\Domain\SavedSearches\Enums\SavedSearchDateMode;
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class UpdateSavedSearchRequest extends StoreSavedSearchRequest

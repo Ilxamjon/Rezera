@@ -16,11 +16,13 @@ use App\Models\Resource;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Tests\PostgresTestCase;
+use Tests\Support\AssignsBusinessSubscription;
 use Tests\Support\AuthenticatesUsers;
 use Tests\Support\SeedsBusinessHours;
 
 class BusinessAnalyticsTest extends PostgresTestCase
 {
+    use AssignsBusinessSubscription;
     use AuthenticatesUsers;
     use SeedsBusinessHours;
 
@@ -149,7 +151,7 @@ class BusinessAnalyticsTest extends PostgresTestCase
     }
 
     /**
-     * @return array{0: Business, 1: Resource, 2: User, 3?: User}
+     * @return array{0: Business, 1: resource, 2: User, 3?: User}
      */
     private function analyticsBusiness(bool $includeStaff = false): array
     {
@@ -160,17 +162,12 @@ class BusinessAnalyticsTest extends PostgresTestCase
             'timezone' => 'Asia/Tashkent',
         ]);
 
-        BusinessMember::factory()->create([
-            'business_id' => $business->id,
-            'user_id' => $owner->id,
-            'member_role' => BusinessMemberRole::Owner,
-        ]);
-
         $this->seedBusinessHours($business, collect(range(1, 7))->map(fn (int $weekday): array => [
             'weekday' => $weekday,
             'opens_at' => '10:00',
             'closes_at' => '02:00',
             'is_closed' => false,
+            'is_open_24h' => false,
         ]));
 
         $resource = Resource::factory()->create([
@@ -178,6 +175,8 @@ class BusinessAnalyticsTest extends PostgresTestCase
             'status' => ResourceStatus::Active,
             'hourly_rate_amount' => 50_000,
         ]);
+
+        $this->assignProSubscription($business);
 
         if ($includeStaff) {
             $staff = User::factory()->create();

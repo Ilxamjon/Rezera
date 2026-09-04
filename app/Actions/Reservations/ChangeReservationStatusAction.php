@@ -33,9 +33,18 @@ final class ChangeReservationStatusAction
             ]);
         }
 
-        $this->transitionService->assertCanTransition($fromStatus, $toStatus);
+        return DB::transaction(function () use ($reservation, $toStatus, $actor, $source, $reason): Reservation {
+            $locked = Reservation::query()->whereKey($reservation->id)->lockForUpdate()->firstOrFail();
+            $fromStatus = $locked->status;
 
-        return DB::transaction(function () use ($reservation, $fromStatus, $toStatus, $actor, $source, $reason): Reservation {
+            if ($fromStatus === null) {
+                throw ValidationException::withMessages([
+                    'status' => [__('reservations.invalid_status_transition')],
+                ]);
+            }
+
+            $this->transitionService->assertCanTransition($fromStatus, $toStatus);
+
             $updates = ['status' => $toStatus];
 
             if ($toStatus === ReservationStatus::Completed) {
@@ -58,10 +67,10 @@ final class ChangeReservationStatusAction
                 $updates['rejection_reason'] = $reason;
             }
 
-            $reservation->update($updates);
+            $locked->update($updates);
 
             $this->recordEvent->execute(
-                reservation: $reservation,
+                reservation: $locked,
                 fromStatus: $fromStatus,
                 toStatus: $toStatus,
                 actor: $actor,
@@ -69,16 +78,16 @@ final class ChangeReservationStatusAction
                 reason: $reason,
             );
 
-            DB::afterCommit(function () use ($reservation, $fromStatus, $toStatus, $actor): void {
+            DB::afterCommit(function () use ($locked, $fromStatus, $toStatus, $actor): void {
                 ReservationStatusChanged::dispatch(
-                    $reservation->fresh(),
+                    $locked->fresh(),
                     $fromStatus,
                     $toStatus,
                     $actor,
                 );
             });
 
-            return $reservation->fresh(['business', 'resource.group', 'customer']);
+            return $locked->fresh(['business', 'resource.group', 'customer']);
         });
     }
 }

@@ -13,6 +13,7 @@ use App\Models\SavedSearch;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class SavedSearchController extends BaseApiController
 {
@@ -44,7 +45,7 @@ class SavedSearchController extends BaseApiController
 
     public function show(Request $request, SavedSearch $savedSearch): JsonResponse
     {
-        $this->authorize('view', $savedSearch);
+        Gate::authorize('view', $savedSearch);
 
         return $this->success(new SavedSearchResource($savedSearch));
     }
@@ -54,7 +55,7 @@ class SavedSearchController extends BaseApiController
         SavedSearch $savedSearch,
         UpdateSavedSearchAction $updateSavedSearch,
     ): JsonResponse {
-        $this->authorize('update', $savedSearch);
+        Gate::authorize('update', $savedSearch);
 
         $updated = $updateSavedSearch->execute(
             $request->user(),
@@ -70,7 +71,7 @@ class SavedSearchController extends BaseApiController
         SavedSearch $savedSearch,
         DeleteSavedSearchAction $deleteSavedSearch,
     ): JsonResponse {
-        $this->authorize('delete', $savedSearch);
+        Gate::authorize('delete', $savedSearch);
 
         $deleteSavedSearch->execute($request->user(), $savedSearch);
 

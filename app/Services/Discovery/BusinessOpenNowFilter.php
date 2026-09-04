@@ -2,56 +2,60 @@
 
 namespace App\Services\Discovery;
 
-use App\Domain\Reservations\Enums\ReservationStatus;
-use App\Domain\Resources\Enums\ResourceStatus;
+use App\Models\Business;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 
 final class BusinessOpenNowFilter
 {
     /**
-     * @param  Builder<\App\Models\Business>  $query
+     * @param  Builder<Business>  $query
      */
-    public function apply(Builder $query): void
+    public function apply(Builder $query, ?CarbonImmutable $at = null): void
     {
-        $query->whereExists(function ($subQuery): void {
+        // Bind PHP/app clock so Carbon::setTestNow() is honored (PostgreSQL now() is not).
+        $at ??= CarbonImmutable::instance(now());
+        $atUtc = $at->utc()->format('Y-m-d H:i:s.uP');
+
+        $query->whereExists(function ($subQuery) use ($atUtc): void {
             $subQuery
                 ->selectRaw('1')
                 ->from('business_hours as bh')
                 ->whereColumn('bh.business_id', 'businesses.id')
                 ->where('bh.is_closed', false)
-                ->whereRaw("
-                    (
-                        bh.is_open_24h = true
-                        AND bh.weekday = EXTRACT(ISODOW FROM timezone(COALESCE(businesses.timezone, 'UTC'), now()))::int
-                    )
-                    OR (
-                        bh.weekday = EXTRACT(ISODOW FROM timezone(COALESCE(businesses.timezone, 'UTC'), now()))::int
-                        AND bh.opens_at IS NOT NULL
-                        AND bh.closes_at IS NOT NULL
-                        AND (
-                            (
-                                bh.closes_at > bh.opens_at
-                                AND timezone(COALESCE(businesses.timezone, 'UTC'), now())::time >= bh.opens_at
-                                AND timezone(COALESCE(businesses.timezone, 'UTC'), now())::time < bh.closes_at
+                ->where(function ($hoursQuery) use ($atUtc): void {
+                    $hoursQuery
+                        ->whereRaw('
+                            bh.is_open_24h = true
+                            AND bh.weekday = EXTRACT(ISODOW FROM timezone(COALESCE(businesses.timezone, \'UTC\'), ?::timestamptz))::int
+                        ', [$atUtc])
+                        ->orWhereRaw('
+                            bh.weekday = EXTRACT(ISODOW FROM timezone(COALESCE(businesses.timezone, \'UTC\'), ?::timestamptz))::int
+                            AND bh.opens_at IS NOT NULL
+                            AND bh.closes_at IS NOT NULL
+                            AND (
+                                (
+                                    bh.closes_at > bh.opens_at
+                                    AND timezone(COALESCE(businesses.timezone, \'UTC\'), ?::timestamptz)::time >= bh.opens_at
+                                    AND timezone(COALESCE(businesses.timezone, \'UTC\'), ?::timestamptz)::time < bh.closes_at
+                                )
+                                OR (
+                                    bh.closes_at < bh.opens_at
+                                    AND timezone(COALESCE(businesses.timezone, \'UTC\'), ?::timestamptz)::time >= bh.opens_at
+                                )
                             )
-                            OR (
-                                bh.closes_at < bh.opens_at
-                                AND timezone(COALESCE(businesses.timezone, 'UTC'), now())::time >= bh.opens_at
-                            )
-                        )
-                    )
-                    OR (
-                        bh.weekday = CASE
-                            WHEN EXTRACT(ISODOW FROM timezone(COALESCE(businesses.timezone, 'UTC'), now()))::int = 1 THEN 7
-                            ELSE EXTRACT(ISODOW FROM timezone(COALESCE(businesses.timezone, 'UTC'), now()))::int - 1
-                        END
-                        AND bh.opens_at IS NOT NULL
-                        AND bh.closes_at IS NOT NULL
-                        AND bh.closes_at < bh.opens_at
-                        AND timezone(COALESCE(businesses.timezone, 'UTC'), now())::time < bh.closes_at
-                    )
-                ");
+                        ', [$atUtc, $atUtc, $atUtc, $atUtc])
+                        ->orWhereRaw('
+                            bh.weekday = CASE
+                                WHEN EXTRACT(ISODOW FROM timezone(COALESCE(businesses.timezone, \'UTC\'), ?::timestamptz))::int = 1 THEN 7
+                                ELSE EXTRACT(ISODOW FROM timezone(COALESCE(businesses.timezone, \'UTC\'), ?::timestamptz))::int - 1
+                            END
+                            AND bh.opens_at IS NOT NULL
+                            AND bh.closes_at IS NOT NULL
+                            AND bh.closes_at < bh.opens_at
+                            AND timezone(COALESCE(businesses.timezone, \'UTC\'), ?::timestamptz)::time < bh.closes_at
+                        ', [$atUtc, $atUtc, $atUtc]);
+                });
         });
     }
 }

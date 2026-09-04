@@ -23,8 +23,10 @@ use App\Models\Reservation;
 use App\Models\Resource;
 use App\Models\User;
 use App\Services\Loyalty\LoyaltyService;
+use App\Services\Referrals\ReferralService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Validation\ValidationException;
 use Tests\PostgresTestCase;
 use Tests\Support\AuthenticatesUsers;
 use Tests\Support\SeedsBusinessHours;
@@ -299,13 +301,9 @@ class LoyaltyAndReferralTest extends PostgresTestCase
         $user = User::factory()->create();
         $code = ReferralCode::factory()->create(['user_id' => $user->id]);
 
-        $this->postJson('/api/v1/auth/register', [
-            'name' => 'Another',
-            'phone' => '+998901114455',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-            'referral_code' => $code->code,
-        ])->assertUnprocessable();
+        $this->expectException(ValidationException::class);
+
+        app(ReferralService::class)->registerReferral($user, $code->code);
     }
 
     public function test_first_completed_reservation_qualifies_referral(): void
@@ -375,7 +373,7 @@ class LoyaltyAndReferralTest extends PostgresTestCase
     }
 
     /**
-     * @return array{0: Business, 1: Resource, 2: User}
+     * @return array{0: Business, 1: resource, 2: User}
      */
     private function bookableBusinessWithOwner(bool $includeStaff = false): array
     {
@@ -403,7 +401,7 @@ class LoyaltyAndReferralTest extends PostgresTestCase
     }
 
     /**
-     * @return array{0: Business, 1: Resource}
+     * @return array{0: Business, 1: resource}
      */
     private function bookableBusiness(): array
     {

@@ -4,9 +4,12 @@ namespace Tests\Feature\Api\V1\Business;
 
 use App\Models\BusinessCategory;
 use Tests\PostgresTestCase;
+use Tests\Support\IsolatesPublicCatalog;
 
 class BusinessCategoryTest extends PostgresTestCase
 {
+    use IsolatesPublicCatalog;
+
     public function test_public_user_can_retrieve_active_categories(): void
     {
         $active = BusinessCategory::factory()->create([

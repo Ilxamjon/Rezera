@@ -3,10 +3,12 @@
 namespace App\Services\Businesses;
 
 use App\Domain\Businesses\Enums\BusinessMemberInvitationStatus;
+use App\Domain\Businesses\Enums\BusinessMemberRole;
 use App\Models\Business;
 use App\Models\BusinessMemberInvitation;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Validation\ValidationException;
 
 final class BusinessStaffInvitationService
 {
@@ -65,7 +67,7 @@ final class BusinessStaffInvitationService
     public function assertRoleInvitable(BusinessMemberRole $role): void
     {
         if ($role === BusinessMemberRole::Owner) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'member_role' => [__('business.cannot_invite_owner')],
             ]);
         }
@@ -83,7 +85,7 @@ final class BusinessStaffInvitationService
             ->exists();
 
         if ($exists) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'phone' => [__('business.invitation_already_pending')],
             ]);
         }

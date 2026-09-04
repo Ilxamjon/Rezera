@@ -2,18 +2,16 @@
 
 namespace Tests\Support;
 
-use App\Domain\Businesses\Enums\BusinessMemberRole;
-use App\Domain\Businesses\Enums\BusinessMemberStatus;
+use App\Domain\Reservations\Enums\ConfirmationMode;
 use App\Domain\Resources\Enums\ResourceStatus;
 use App\Domain\Resources\Enums\ResourceType;
-use App\Domain\Reservations\Enums\ConfirmationMode;
 use App\Models\BookingPolicy;
 use App\Models\Business;
 use App\Models\BusinessHour;
-use App\Models\BusinessMember;
 use App\Models\Resource;
 use App\Models\ResourceGroup;
 use App\Models\User;
+use App\Services\Businesses\BusinessOnboardingService;
 
 trait CompletesBusinessOnboarding
 {
@@ -35,13 +33,15 @@ trait CompletesBusinessOnboarding
         );
 
         for ($weekday = 1; $weekday <= 7; $weekday++) {
+            $isClosed = $weekday === 7;
+
             BusinessHour::query()->updateOrCreate(
                 ['business_id' => $business->id, 'weekday' => $weekday],
                 [
-                    'is_closed' => $weekday === 7,
+                    'is_closed' => $isClosed,
                     'is_open_24h' => false,
-                    'opens_at' => '09:00',
-                    'closes_at' => '22:00',
+                    'opens_at' => $isClosed ? null : '09:00',
+                    'closes_at' => $isClosed ? null : '22:00',
                 ],
             );
         }
@@ -55,7 +55,7 @@ trait CompletesBusinessOnboarding
             'resource_type' => ResourceType::Pc,
         ]);
 
-        return app(\App\Services\Businesses\BusinessOnboardingService::class)->sync($business->fresh());
+        return app(BusinessOnboardingService::class)->sync($business->fresh());
     }
 
     protected function businessOwner(Business $business): User

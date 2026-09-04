@@ -2,13 +2,26 @@
 
 namespace App\Http\Requests\Api\V1\Review;
 
+use App\Models\Business;
+use App\Models\Review;
 use Illuminate\Foundation\Http\FormRequest;
 
 class BusinessReviewResponseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('respond', $this->route('review')) === true;
+        $review = $this->route('review');
+        $business = $this->route('business');
+
+        if (! $review instanceof Review || ! $business instanceof Business) {
+            return false;
+        }
+
+        if ($review->business_id !== $business->id) {
+            abort(404);
+        }
+
+        return $this->user()?->can('respond', $review) === true;
     }
 
     /**

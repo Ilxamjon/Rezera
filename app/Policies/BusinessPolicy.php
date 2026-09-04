@@ -42,6 +42,16 @@ class BusinessPolicy extends BasePolicy
         return $this->businessAuthorization->canManageBusiness($user, $business->id);
     }
 
+    public function manage(User $user, Business $business): bool
+    {
+        return $this->businessAuthorization->canManageBusiness($user, $business->id);
+    }
+
+    public function manageBookings(User $user, Business $business): bool
+    {
+        return $this->businessAuthorization->canManageBookings($user, $business->id);
+    }
+
     public function viewMembers(User $user, Business $business): bool
     {
         return $this->businessAuthorization->canViewMembers($user, $business->id);

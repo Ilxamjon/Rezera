@@ -15,6 +15,10 @@ class BusinessDiscoveryRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        if ($this->boolean('favorites') && $this->user() === null) {
+            abort(401, __('auth.unauthenticated'));
+        }
+
         return true;
     }
 
@@ -50,6 +54,21 @@ class BusinessDiscoveryRequest extends FormRequest
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        foreach (['open_now', 'available_now', 'favorites', 'include_open_now'] as $field) {
+            if (! $this->has($field)) {
+                continue;
+            }
+
+            $parsed = filter_var($this->input($field), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+            if ($parsed !== null) {
+                $this->merge([$field => $parsed]);
+            }
+        }
     }
 
     public function withValidator(Validator $validator): void

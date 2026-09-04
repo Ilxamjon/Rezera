@@ -33,7 +33,7 @@ class CreateResourceAction
             'capacity' => $data['capacity'] ?? 1,
             'currency' => $data['currency'] ?? 'UZS',
             'rate_unit' => $data['rate_unit'] ?? RateUnit::Hour,
-            'metadata' => $data['metadata'] ?? [],
+            'metadata' => $data['metadata'] ?? new \stdClass,
             'sort_order' => $data['sort_order'] ?? 0,
         ])->fresh(['group']);
 

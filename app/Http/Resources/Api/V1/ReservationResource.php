@@ -2,13 +2,16 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Models\Reservation;
 use App\Services\Reservations\ReservationOperationalStatusResolver;
 use App\Support\Reservations\ReservationIntervalResolver;
+use App\Support\Time\TimeInterval;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Reservation
+ * @mixin Reservation
  */
 class ReservationResource extends JsonResource
 {
@@ -23,9 +26,9 @@ class ReservationResource extends JsonResource
         $interval = null;
 
         if ($this->start_at !== null && $this->end_at !== null) {
-            $interval = new \App\Support\Time\TimeInterval(
-                \Carbon\CarbonImmutable::instance($this->start_at)->utc(),
-                \Carbon\CarbonImmutable::instance($this->end_at)->utc(),
+            $interval = new TimeInterval(
+                CarbonImmutable::instance($this->start_at)->utc(),
+                CarbonImmutable::instance($this->end_at)->utc(),
             );
         }
 
@@ -39,8 +42,13 @@ class ReservationResource extends JsonResource
             'check_in_method' => $this->check_in_method?->value,
             'check_out_method' => $this->check_out_method?->value,
             'session' => $this->when(
-                $this->relationLoaded('activeSession') || $this->relationLoaded('latestSession'),
-                fn () => new ReservationSessionResource($this->activeSession ?? $this->latestSession),
+                ($this->relationLoaded('activeSession') && $this->activeSession !== null)
+                || ($this->relationLoaded('latestSession') && $this->latestSession !== null),
+                fn () => new ReservationSessionResource(
+                    ($this->relationLoaded('activeSession') && $this->activeSession !== null)
+                        ? $this->activeSession
+                        : $this->latestSession
+                ),
             ),
             'business' => $this->whenLoaded('business', fn () => [
                 'id' => $this->business?->id,

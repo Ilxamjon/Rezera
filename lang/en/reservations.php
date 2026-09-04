@@ -11,6 +11,7 @@ return [
     'invalid_status_transition' => 'Cannot change reservation status from :from to :to.',
     'created' => 'Reservation created successfully.',
     'cancelled' => 'Reservation cancelled successfully.',
+    'pending_expired' => 'Pending reservation expired due to confirmation timeout.',
     'status_updated' => 'Reservation status updated successfully.',
     'checked_in' => 'Check-in successful.',
     'checked_out' => 'Check-out successful.',

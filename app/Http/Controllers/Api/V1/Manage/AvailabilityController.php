@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Manage;
 
-use App\Http\Controllers\Api\V1\AvailabilityController;
+use App\Http\Controllers\Api\V1\BaseApiController;
 use App\Http\Requests\Api\V1\Availability\CheckAvailabilityRequest;
 use App\Http\Resources\Api\V1\AvailabilityResponseResource;
 use App\Models\Business;
@@ -12,7 +12,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
-class AvailabilityController extends \App\Http\Controllers\Api\V1\BaseApiController
+class AvailabilityController extends BaseApiController
 {
     public function index(
         CheckAvailabilityRequest $request,

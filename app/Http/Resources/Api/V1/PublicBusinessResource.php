@@ -2,11 +2,12 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Models\Business;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Business
+ * @mixin Business
  */
 class PublicBusinessResource extends JsonResource
 {
@@ -39,7 +40,11 @@ class PublicBusinessResource extends JsonResource
             'currency' => config('rezera.default_currency', 'UZS'),
             'open_now' => $this->when($this->open_now !== null, (bool) $this->open_now),
             'is_favorite' => $this->when($this->is_favorite !== null, (bool) $this->is_favorite),
-            'rating' => new BusinessRatingResource($this->resource),
+            'rating' => new BusinessRatingResource([
+                'average' => $this->rating_average,
+                'count' => (int) ($this->rating_count ?? 0),
+                'distribution' => $this->rating_distribution,
+            ]),
         ];
     }
 }

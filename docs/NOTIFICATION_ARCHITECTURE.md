@@ -1,6 +1,6 @@
 # Rezera — Notification Architecture
 
-**Status:** Foundation implemented (Prompt #12)  
+**Status:** Phase 8 — in-app inbox in Flutter + FCM HTTP v1 provider (opt-in)  
 **Depends on:** `docs/BOOKING_MANAGEMENT.md`, `docs/PAYMENT_ARCHITECTURE.md`
 
 ---
@@ -17,7 +17,7 @@ NotificationService
 ├── In-app record (user_notifications)
 └── DeliverNotificationJob (push/sms/email/telegram)
         ↓
-Provider abstraction (mock implemented)
+Provider abstraction (mock or FCM HTTP v1)
 ```
 
 Reservation/payment modules dispatch events only — never call external APIs directly.
@@ -60,7 +60,7 @@ Reservation/payment modules dispatch events only — never call external APIs di
 | Channel | Status |
 |---|---|
 | `database` (in-app) | **IMPLEMENTED** |
-| `push` | Abstraction + mock provider |
+| `push` | Abstraction + mock + FCM HTTP v1 |
 | `sms` | Abstraction + mock provider |
 | `email` | Laravel Mail |
 | `telegram` | Abstraction + mock provider |
@@ -70,7 +70,7 @@ Reservation/payment modules dispatch events only — never call external APIs di
 | Provider | Status |
 |---|---|
 | Mock push/SMS/Telegram | **IMPLEMENTED** (tests) |
-| Firebase FCM | PLANNED |
+| Firebase FCM | **IMPLEMENTED** (HTTP v1; enable with credentials) |
 | Eskiz / Play Mobile / Twilio | PLANNED |
 | SendGrid / Mailgun | PLANNED |
 | Telegram Bot API | PLANNED |
@@ -151,8 +151,27 @@ Listeners use `$afterCommit = true` and are queued.
 - `NOTIFICATION_SMS_ENABLED`
 - `NOTIFICATION_EMAIL_ENABLED`
 - `NOTIFICATION_TELEGRAM_ENABLED`
-- `NOTIFICATION_PUSH_DRIVER=mock`
-- `FCM_PROJECT_ID` (future)
+- `NOTIFICATION_PUSH_DRIVER=mock` or `fcm`
+- `FCM_PROJECT_ID`
+- `FCM_SERVICE_ACCOUNT_PATH` (default `storage/app/firebase-credentials.json`)
+
+### Enabling FCM (confirm / reject push)
+
+1. Create a Firebase project and enable Cloud Messaging.
+2. Create a service account with Firebase Cloud Messaging Admin and save the JSON to `storage/app/firebase-credentials.json` (gitignored).
+3. Set:
+
+```
+NOTIFICATION_PUSH_ENABLED=true
+NOTIFICATION_PUSH_DRIVER=fcm
+FCM_PROJECT_ID=your-project-id
+FCM_SERVICE_ACCOUNT_PATH=storage/app/firebase-credentials.json
+```
+
+4. Run a queue worker (`DeliverNotificationJob`). Confirm and cancel already dispatch the push channel.
+5. Flutter currently registers the device on login and shows the in-app inbox. Device FCM tokens require adding `firebase_messaging` + `google-services.json` / `GoogleService-Info.plist` (not committed). Until then, customers still see confirm/reject in the inbox.
+
+Stale FCM tokens (`UNREGISTERED` / `NOT_FOUND`) deactivate the device row.
 
 ---
 
@@ -179,4 +198,5 @@ Listeners use `$afterCommit = true` and are queued.
 | Preferences | `app/Services/Notifications/NotificationPreferenceService.php` |
 | Listeners | `app/Listeners/Notifications/*` |
 | Delivery job | `app/Jobs/Notifications/DeliverNotificationJob.php` |
-| Tests | `tests/Feature/Api/V1/Notification/NotificationApiTest.php` |
+| FCM client | `app/Services/Notifications/Providers/Fcm/FcmClient.php` |
+| Tests | `tests/Feature/Api/V1/Notification/NotificationApiTest.php`, `tests/Feature/Notifications/FcmPushNotificationProviderTest.php` |

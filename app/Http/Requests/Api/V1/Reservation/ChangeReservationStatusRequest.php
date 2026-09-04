@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\Reservation;
 
 use App\Domain\Reservations\Enums\ReservationStatus;
+use App\Models\Business;
 use App\Models\Reservation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -13,6 +14,13 @@ class ChangeReservationStatusRequest extends FormRequest
     public function authorize(): bool
     {
         $reservation = $this->route('reservation');
+        $business = $this->route('business');
+
+        if ($reservation instanceof Reservation && $business instanceof Business) {
+            if ($reservation->business_id !== $business->id) {
+                abort(404);
+            }
+        }
 
         if (! $reservation instanceof Reservation) {
             return false;

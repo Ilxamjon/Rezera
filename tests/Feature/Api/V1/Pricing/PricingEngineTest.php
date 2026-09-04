@@ -4,7 +4,6 @@ namespace Tests\Feature\Api\V1\Pricing;
 
 use App\Domain\Businesses\Enums\BusinessMemberRole;
 use App\Domain\Businesses\Enums\BusinessStatus;
-use App\Domain\Identity\Enums\PlatformRole;
 use App\Domain\Pricing\Enums\PricingType;
 use App\Domain\Promotions\Enums\DiscountType;
 use App\Domain\Resources\Enums\ResourceStatus;
@@ -17,11 +16,13 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use Tests\PostgresTestCase;
+use Tests\Support\AssignsBusinessSubscription;
 use Tests\Support\AuthenticatesUsers;
 use Tests\Support\SeedsBusinessHours;
 
 class PricingEngineTest extends PostgresTestCase
 {
+    use AssignsBusinessSubscription;
     use AuthenticatesUsers;
     use SeedsBusinessHours;
 
@@ -352,7 +353,7 @@ class PricingEngineTest extends PostgresTestCase
     }
 
     /**
-     * @return array{0: Business, 1: Resource}
+     * @return array{0: Business, 1: resource}
      */
     private function bookableBusiness(array $hours = ['opens_at' => '10:00', 'closes_at' => '02:00']): array
     {
@@ -371,6 +372,8 @@ class PricingEngineTest extends PostgresTestCase
 
         $this->seedBusinessHours($business, $schedule);
 
+        $this->assignProSubscription($business);
+
         $resource = Resource::factory()->create([
             'business_id' => $business->id,
             'status' => ResourceStatus::Active,
@@ -382,7 +385,7 @@ class PricingEngineTest extends PostgresTestCase
     }
 
     /**
-     * @return array{0: Business, 1: Resource, 2: User}
+     * @return array{0: Business, 1: resource, 2: User}
      */
     private function bookableBusinessWithOwner(): array
     {

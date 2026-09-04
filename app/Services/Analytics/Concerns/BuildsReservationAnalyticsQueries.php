@@ -16,9 +16,9 @@ trait BuildsReservationAnalyticsQueries
         AnalyticsFilter $filter,
     ): Builder {
         $query = Reservation::query()
-            ->where('business_id', $business->id)
-            ->where('start_at', '<', $range->utcEnd())
-            ->where('end_at', '>', $range->utcStart());
+            ->where('reservations.business_id', $business->id)
+            ->where('reservations.start_at', '<', $range->utcEnd())
+            ->where('reservations.end_at', '>', $range->utcStart());
 
         if ($filter->resourceId !== null) {
             $query->where('resource_id', $filter->resourceId);

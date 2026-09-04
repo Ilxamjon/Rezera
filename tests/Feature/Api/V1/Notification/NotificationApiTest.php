@@ -8,7 +8,6 @@ use App\Domain\Notifications\Enums\NotificationType;
 use App\Jobs\Notifications\DeliverNotificationJob;
 use App\Models\NotificationPreference;
 use App\Models\User;
-use App\Models\UserDevice;
 use App\Models\UserNotification;
 use App\Services\Notifications\NotificationService;
 use Illuminate\Support\Facades\Queue;
@@ -91,15 +90,22 @@ class NotificationApiTest extends PostgresTestCase
     {
         $user = User::factory()->create();
 
-        $this->putJson('/api/v1/me/notification-preferences', [
+        $response = $this->putJson('/api/v1/me/notification-preferences', [
             'preferences' => [[
                 'notification_type' => NotificationType::ReservationConfirmed->value,
                 'channel' => NotificationChannel::Push->value,
                 'enabled' => false,
             ]],
-        ], $this->authHeaders($user))
-            ->assertOk()
-            ->assertJsonPath('data.items.0.enabled', false);
+        ], $this->authHeaders($user));
+
+        $response->assertOk();
+
+        $confirmedPreference = collect($response->json('data.items'))
+            ->first(fn (array $item): bool => $item['notification_type'] === NotificationType::ReservationConfirmed->value
+                && $item['channel'] === NotificationChannel::Push->value);
+
+        $this->assertNotNull($confirmedPreference);
+        $this->assertFalse($confirmedPreference['enabled']);
 
         $this->assertDatabaseHas('notification_preferences', [
             'user_id' => $user->id,

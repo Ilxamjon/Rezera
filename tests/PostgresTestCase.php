@@ -2,34 +2,76 @@
 
 namespace Tests;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Database\Seeders\SubscriptionPlanSeeder;
+use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
 abstract class PostgresTestCase extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected bool $seedSubscriptionPlans = true;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         if (config('database.default') !== 'pgsql') {
             $this->markTestSkipped('PostgreSQL is required for this test suite.');
         }
 
-        parent::setUp();
+        $this->recoverAbortedPostgresTransactionIfNeeded();
 
         if ($this->seedSubscriptionPlans) {
-            $this->seed(\Database\Seeders\SubscriptionPlanSeeder::class);
+            $this->seed(SubscriptionPlanSeeder::class);
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        if (config('database.default') === 'pgsql') {
+            $this->recoverAbortedPostgresTransactionIfNeeded();
+        }
+
+        parent::tearDown();
+    }
+
+    private function recoverAbortedPostgresTransactionIfNeeded(): void
+    {
+        if (config('database.default') !== 'pgsql') {
+            return;
+        }
+
+        $connection = DB::connection();
+
+        try {
+            $connection->selectOne('SELECT 1');
+        } catch (\Throwable) {
+            DB::purge(config('database.default'));
+
+            return;
+        }
+
+        while ($connection->transactionLevel() > 0) {
+            try {
+                $connection->rollBack();
+            } catch (\Throwable) {
+                DB::purge(config('database.default'));
+
+                break;
+            }
         }
     }
 
     protected function assertPostgresExclusionViolation(callable $callback): void
     {
         try {
-            $callback();
-            $this->fail('Expected PostgreSQL exclusion constraint violation (SQLSTATE 23P01).');
-        } catch (\Illuminate\Database\QueryException $exception) {
+            DB::transaction(function () use ($callback): void {
+                $callback();
+                $this->fail('Expected PostgreSQL exclusion constraint violation (SQLSTATE 23P01).');
+            });
+        } catch (QueryException $exception) {
             $this->assertSame('23P01', $exception->errorInfo[0] ?? null, $exception->getMessage());
         }
     }

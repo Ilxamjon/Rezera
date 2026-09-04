@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Reviews\ReviewQueryBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ReviewController extends BaseApiController
 {
@@ -50,7 +51,7 @@ class ReviewController extends BaseApiController
         Review $review,
         DeleteReviewAction $deleteReview,
     ): JsonResponse {
-        $this->authorize('delete', $review);
+        Gate::authorize('delete', $review);
 
         $deleteReview->execute($request->user(), $review);
 

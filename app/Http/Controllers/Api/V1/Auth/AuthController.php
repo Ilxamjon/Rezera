@@ -60,7 +60,7 @@ class AuthController extends BaseApiController
         /** @var User $user */
         $user = $request->user();
 
-        $logoutUser->execute($user);
+        $logoutUser->execute($user, $request->bearerToken());
 
         return $this->success(null, __('auth.logout_successful'));
     }

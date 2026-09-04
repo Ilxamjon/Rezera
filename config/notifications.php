@@ -17,6 +17,14 @@ return [
         'telegram' => ['driver' => env('NOTIFICATION_TELEGRAM_DRIVER', 'mock')],
     ],
 
+    'fcm' => [
+        'project_id' => env('FCM_PROJECT_ID'),
+        'credentials_path' => env('FCM_SERVICE_ACCOUNT_PATH', storage_path('app/firebase-credentials.json')),
+        'credentials_json' => env('FCM_SERVICE_ACCOUNT_JSON'),
+        // Testing only: skip JWT signing when set (e.g. PHPUnit + Http::fake).
+        'access_token' => env('FCM_ACCESS_TOKEN'),
+    ],
+
     'queue' => env('NOTIFICATION_QUEUE', 'default'),
 
     'retry' => [

@@ -24,7 +24,9 @@ final class BusinessSettingsService
 
     public function getOrCreateForBusiness(Business $business): BookingPolicy
     {
-        $existing = $business->bookingPolicy;
+        $existing = BookingPolicy::query()
+            ->where('business_id', $business->id)
+            ->first();
 
         if ($existing !== null) {
             return $existing;

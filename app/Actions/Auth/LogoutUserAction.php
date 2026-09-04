@@ -7,8 +7,14 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class LogoutUserAction
 {
-    public function execute(User $user): void
+    public function execute(User $user, ?string $plainTextToken = null): void
     {
+        if ($plainTextToken !== null) {
+            PersonalAccessToken::findToken($plainTextToken)?->delete();
+
+            return;
+        }
+
         /** @var PersonalAccessToken|null $token */
         $token = $user->currentAccessToken();
 

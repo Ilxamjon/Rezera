@@ -172,6 +172,11 @@ class BusinessOnboardingAndVerificationTest extends PostgresTestCase
 
     public function test_unverified_business_not_publicly_discoverable(): void
     {
+        config([
+            'business_onboarding.public_requires_verification' => true,
+            'business_onboarding.public_requires_onboarding_complete' => true,
+        ]);
+
         $business = Business::factory()->create([
             'status' => BusinessStatus::Approved,
             'verification_status' => BusinessVerificationStatus::Unverified,

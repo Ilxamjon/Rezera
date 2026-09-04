@@ -4,6 +4,8 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/app/firebase-credentials.json
+/storage/app/fcm-service-account.json
 /vendor
 .env
 .env.backup
@@ -17,3 +19,6 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/bootstrap/cache/*.php
+test-results*.txt
+test-triage-output.txt

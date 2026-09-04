@@ -2,12 +2,13 @@
 
 use App\Exceptions\ApiExceptionRenderer;
 use App\Http\Middleware\EnsureJsonRequest;
+use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\OptionalSanctumAuthentication;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\Request;
-use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('saved-searches:process-alerts')->cron('*/'.$minutes.' * * * *');
         $schedule->command('saved-searches:cleanup-alerts')->daily();
         $schedule->command('subscriptions:process-lifecycle')->hourly();
+        $schedule->command('reservations:expire-pending')->everyMinute();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [
@@ -28,7 +30,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'platform.admin' => \App\Http\Middleware\EnsurePlatformAdmin::class,
+            'platform.admin' => EnsurePlatformAdmin::class,
+            'optional.sanctum' => OptionalSanctumAuthentication::class,
         ]);
 
         $middleware->throttleApi('api');

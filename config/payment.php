@@ -7,7 +7,7 @@ return [
         'mock' => [
             'enabled' => env('PAYMENT_MOCK_ENABLED', env('APP_ENV') !== 'production'),
             'allow_simulation' => env('PAYMENT_MOCK_ALLOW_SIMULATION', env('APP_ENV') === 'local' || env('APP_ENV') === 'testing'),
-            'webhook_secret' => env('PAYMENT_MOCK_WEBHOOK_SECRET', 'mock-webhook-secret'),
+            'webhook_secret' => env('PAYMENT_MOCK_WEBHOOK_SECRET', env('APP_ENV') === 'production' ? '' : 'mock-webhook-secret'),
         ],
         'payme' => [
             'enabled' => env('PAYMENT_PAYME_ENABLED', false),

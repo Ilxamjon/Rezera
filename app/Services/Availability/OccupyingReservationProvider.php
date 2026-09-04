@@ -30,7 +30,7 @@ final class OccupyingReservationProvider
                 ReservationStatus::occupying(),
             ))
             ->where('start_at', '<', $requestedInterval->toUtcEnd())
-            ->where('end_at', '>', $requestedInterval->toUtcStart())
+            ->whereRaw('(end_at + make_interval(mins => buffer_minutes_applied)) > ?', [$requestedInterval->toUtcStart()])
             ->get();
 
         return $reservations

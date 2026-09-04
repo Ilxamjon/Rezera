@@ -8,7 +8,7 @@ Mobile-first booking and reservation platform for Uzbekistan. This repository co
 - **Laravel** 11
 - **PostgreSQL** 16+ (required for production)
 - **Laravel Sanctum** (API token authentication)
-- **Flutter** mobile client (separate repository / future module)
+- **Flutter** mobile client in [`mobile/`](mobile/) (Phase 6 customer app)
 
 ## Documentation
 
@@ -36,6 +36,11 @@ Mobile-first booking and reservation platform for Uzbekistan. This repository co
 | [docs/PROMO_CODES_AND_DISCOUNTS.md](docs/PROMO_CODES_AND_DISCOUNTS.md) | Promo codes, coupons & discounts |
 | [docs/PRICING_ENGINE.md](docs/PRICING_ENGINE.md) | Advanced pricing engine |
 | [docs/CHECK_IN_CHECK_OUT.md](docs/CHECK_IN_CHECK_OUT.md) | QR check-in, check-out & on-site operations |
+| [docs/BETA_LAUNCH.md](docs/BETA_LAUNCH.md) | Phase 10 beta launch runbook |
+| [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) | Production deploy, workers, backups |
+| [docs/PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md) | Pre-launch / go-no-go checklist |
+| [docs/OWNER_TRAINING_RU.md](docs/OWNER_TRAINING_RU.md) | Owner training sheet (Russian) |
+| [docs/SECURITY.md](docs/SECURITY.md) | Security architecture notes |
 
 ## Requirements
 
@@ -59,14 +64,29 @@ php artisan key:generate
 # DB_USERNAME=rezera
 # DB_PASSWORD=your_password
 
-# 4. Run migrations (when available)
+# 4. Run migrations + seed categories/plans (+ demo clubs in local)
 php artisan migrate
+php artisan db:seed
+# or only demo: php artisan db:seed --class=Database\\Seeders\\DemoClubSeeder
 
-# 5. Start the API
-php artisan serve
+# 5. Start the API (LAN devices need 0.0.0.0 — default binds 127.0.0.1 only)
+php artisan serve --host=0.0.0.0 --port=8000
+# or: composer run serve:lan
 ```
 
 Health check: `GET http://localhost:8000/api/v1/health`
+
+### Demo accounts (after `DemoClubSeeder`)
+
+| Role | Phone | Password |
+|---|---|---|
+| Club owner (Neon Arena) | `+998901000001` | `password` |
+| Staff | `+998901000002` | `password` |
+| Customer | `+998901000003` | `password` |
+| Club owner (Pixel Hub, manual) | `+998901000004` | `password` |
+| Platform admin | `+998901000009` | `password` |
+
+Neon Arena: overnight hours 12:00–06:00, instant confirm. Pixel Hub: 24/7, manual confirm.
 
 ### Authentication (mobile)
 
@@ -125,7 +145,7 @@ All mobile endpoints are under `/api/v1/`.
 | In-app notifications | Implemented |
 | Preferences & devices API | Implemented |
 | Push/SMS/Telegram abstraction | Implemented (mock providers) |
-| Firebase FCM | Planned |
+| Firebase FCM | Implemented (HTTP v1, opt-in) |
 | Real SMS providers | Planned |
 | Telegram Bot API | Planned |
 
@@ -172,3 +192,14 @@ All mobile endpoints are under `/api/v1/`.
 ## License
 
 Proprietary — Rezera.
+
+## Beta launch (Phase 10)
+
+Operational package for first-city launch:
+
+```bash
+php artisan rezera:smoke --strict
+composer run seed:demo   # local/QA only — never on production
+```
+
+Full steps: [docs/BETA_LAUNCH.md](docs/BETA_LAUNCH.md).

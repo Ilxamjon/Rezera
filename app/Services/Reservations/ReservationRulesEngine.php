@@ -203,13 +203,16 @@ final class ReservationRulesEngine
 
     public function countActiveReservations(Business $business, User $customer, ?string $ignoreReservationId = null): int
     {
+        // Lock matching rows first — PostgreSQL rejects FOR UPDATE with aggregate COUNT(*).
         return Reservation::query()
+            ->select('id')
             ->where('business_id', $business->id)
             ->where('customer_id', $customer->id)
             ->whereIn('status', [ReservationStatus::Pending->value, ReservationStatus::Confirmed->value])
             ->where('start_at', '>', now())
             ->when($ignoreReservationId !== null, fn ($q) => $q->where('id', '!=', $ignoreReservationId))
             ->lockForUpdate()
+            ->get()
             ->count();
     }
 
@@ -282,4 +285,3 @@ final class ReservationRulesEngine
         };
     }
 }
-

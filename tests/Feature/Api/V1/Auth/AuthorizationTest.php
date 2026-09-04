@@ -5,8 +5,10 @@ namespace Tests\Feature\Api\V1\Auth;
 use App\Domain\Businesses\Enums\BusinessMemberRole;
 use App\Domain\Businesses\Enums\BusinessMemberStatus;
 use App\Domain\Identity\Enums\PlatformRole;
+use App\Domain\Reservations\Enums\ReservationStatus;
 use App\Models\Business;
 use App\Models\BusinessMember;
+use App\Models\Reservation;
 use App\Models\User;
 use App\Services\Authorization\BusinessAuthorizationService;
 use Illuminate\Support\Facades\Gate;
@@ -76,5 +78,28 @@ class AuthorizationTest extends PostgresTestCase
 
         $this->assertTrue($user->can('manageBookings', $business));
         $this->assertFalse($user->can('manage', $business));
+    }
+
+    public function test_owner_cannot_change_status_on_foreign_business_reservation_via_policy(): void
+    {
+        $ownerA = User::factory()->create();
+        $ownerB = User::factory()->create();
+        $customer = User::factory()->create();
+
+        $businessA = Business::factory()->create(['created_by_user_id' => $ownerA->id]);
+        $businessB = Business::factory()->create(['created_by_user_id' => $ownerB->id]);
+
+        $reservation = Reservation::factory()->create([
+            'business_id' => $businessB->id,
+            'customer_id' => $customer->id,
+            'status' => ReservationStatus::Pending,
+        ]);
+
+        $this->assertFalse($ownerA->can('updateStatus', $reservation));
+        $this->assertFalse($ownerA->can('changeStatus', [
+            $reservation,
+            ReservationStatus::Confirmed,
+        ]));
+        $this->assertTrue($ownerB->can('updateStatus', $reservation));
     }
 }

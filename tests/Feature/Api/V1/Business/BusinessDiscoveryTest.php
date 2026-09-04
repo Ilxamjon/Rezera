@@ -3,9 +3,9 @@
 namespace Tests\Feature\Api\V1\Business;
 
 use App\Domain\Businesses\Enums\BusinessStatus;
+use App\Domain\Reservations\Enums\ReservationStatus;
 use App\Domain\Resources\Enums\ResourceStatus;
 use App\Domain\Resources\Enums\ResourceType;
-use App\Domain\Reservations\Enums\ReservationStatus;
 use App\Models\Business;
 use App\Models\BusinessCategory;
 use App\Models\BusinessHour;
@@ -15,9 +15,12 @@ use App\Models\ResourceGroup;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Tests\PostgresTestCase;
+use Tests\Support\IsolatesPublicCatalog;
 
 class BusinessDiscoveryTest extends PostgresTestCase
 {
+    use IsolatesPublicCatalog;
+
     protected function tearDown(): void
     {
         CarbonImmutable::setTestNow();
@@ -487,11 +490,9 @@ class BusinessDiscoveryTest extends PostgresTestCase
             'status' => ResourceStatus::Active,
         ]);
 
-        BusinessHour::factory()->create([
+        BusinessHour::factory()->closed()->create([
             'business_id' => $business->id,
             'weekday' => CarbonImmutable::now($business->timezone)->dayOfWeekIso,
-            'opens_at' => '00:00:00',
-            'closes_at' => '23:59:00',
         ]);
 
         $response = $this->getJson('/api/v1/businesses/'.$business->id);

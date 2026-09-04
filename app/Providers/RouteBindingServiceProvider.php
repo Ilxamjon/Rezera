@@ -40,6 +40,11 @@ class RouteBindingServiceProvider extends ServiceProvider
         $this->app['router']->bind('category', function (string $value, Route $route) {
             $business = $route->parameter('business');
 
+            // Custom binders run before implicit {business} binding, so business may still be a raw ID.
+            if (is_string($business) && $business !== '') {
+                $business = Business::query()->whereKey($business)->first();
+            }
+
             if ($business instanceof Business) {
                 return ResourceGroup::query()
                     ->where('business_id', $business->id)

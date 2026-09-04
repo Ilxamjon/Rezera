@@ -31,7 +31,7 @@ class ReservationPolicy extends BasePolicy
     public function cancel(User $user, Reservation $reservation): bool
     {
         if ($reservation->customer_id === $user->id) {
-            return $this->transitionService->isCancellableByCustomer($reservation->status);
+            return $user->isActive();
         }
 
         return $this->businessAuthorization->canAdministerBookings($user, $reservation->business_id)

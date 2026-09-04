@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Analytics;
 
+use App\Domain\Analytics\Enums\AnalyticsDatePreset;
 use App\Models\Business;
 use App\Support\Analytics\AnalyticsDateRange;
 use App\Support\Analytics\AnalyticsMetrics;
@@ -22,7 +23,7 @@ class AnalyticsDateRangeTest extends TestCase
         CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-05 01:30:00', 'Asia/Tashkent'));
 
         $business = new Business(['timezone' => 'Asia/Tashkent']);
-        $range = AnalyticsDateRange::preset($business, \App\Domain\Analytics\Enums\AnalyticsDatePreset::Today);
+        $range = AnalyticsDateRange::preset($business, AnalyticsDatePreset::Today);
 
         $this->assertSame('2026-09-05', $range->fromLocal->toDateString());
         $this->assertSame('2026-09-05', $range->toLocal->toDateString());
@@ -34,7 +35,7 @@ class AnalyticsDateRangeTest extends TestCase
         $range = AnalyticsDateRange::fromExplicit($business, '2026-09-01', '2026-09-07');
         $previous = $range->previousPeriod();
 
-        $this->assertSame(7, $previous->fromLocal->diffInDays($previous->toLocal->startOfDay()) + 1);
+        $this->assertSame(7, (int) ($previous->fromLocal->diffInDays($previous->toLocal->startOfDay()) + 1));
     }
 
     public function test_compare_percent_handles_zero_previous(): void
