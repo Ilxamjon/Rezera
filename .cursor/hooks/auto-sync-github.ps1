@@ -56,7 +56,7 @@ Set-Content -Path $lockFile -Value (Get-Date).ToString('o') -Encoding utf8
 try {
     & git add -A 2>$null
 
-    # Never commit secrets even if somehow staged.
+    # Never commit secrets / hook runtime state even if somehow staged.
     $blocked = @(
         '\.env$',
         '\.env\.backup$',
@@ -64,7 +64,9 @@ try {
         'firebase-credentials\.json$',
         'fcm-service-account\.json$',
         'auth\.json$',
-        'credentials\.json$'
+        'credentials\.json$',
+        '\.cursor/hooks/\.last-sync$',
+        '\.cursor/hooks/\.sync\.lock$'
     )
     $staged = & git diff --cached --name-only 2>$null
     foreach ($f in $staged) {
