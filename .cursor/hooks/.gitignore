@@ -1,0 +1,3 @@
+# Ignore hook runtime state
+.cursor/hooks/.last-sync
+.cursor/hooks/.sync.lock
