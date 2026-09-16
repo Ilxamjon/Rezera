@@ -37,9 +37,10 @@ php artisan rezera:smoke --strict
 
 Sample configs:
 
+- **Docker (recommended for VPS):** [DOCKER_DEPLOY.md](DOCKER_DEPLOY.md), `docker-compose.yml`
 - Nginx: `deploy/nginx-rezera.conf.example`
 - Supervisor: `deploy/supervisor-rezera.conf.example`
-- Env template: `.env.production.example`
+- Env template: `.env.production.example` / `.env.docker.example`
 
 ## Queue worker
 
@@ -88,9 +89,28 @@ Test restore on a **non-production** database at least once before beta.
 
 ```
 GET /api/v1/health
+```
+
+Response includes `status` (`ok` | `degraded`) plus `checks.database` and `checks.redis` (Redis skipped when unused). Uptime monitors should alert on non-200.
+
+```
 php artisan rezera:smoke
 php artisan rezera:smoke --strict   # production go/no-go
 ```
+
+## Monitoring
+
+| Signal | How |
+|---|---|
+| Uptime | Probe `GET /api/v1/health` every 1–5 minutes |
+| Errors (API) | `SENTRY_LARAVEL_DSN` in `.env` (`config/sentry.php`) |
+| Errors (app) | Flutter `SENTRY_DSN` dart-define / env (see `mobile/README.md`) |
+| Queues | Supervisor workers + failed_jobs table |
+| Backups | `scripts/backup-postgres.sh` / `.ps1` daily; test restore quarterly |
+
+## Privacy
+
+Public policy page: `/privacy` (required for Play / App Store listings).
 
 ## Mobile release against production API
 

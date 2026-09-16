@@ -5,16 +5,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/formatters/formatters.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/theme/rezera_theme.dart';
+import '../../../core/widgets/rezera_error_view.dart';
 import '../../auth/presentation/session_controller.dart';
+import '../../payments/data/payment_repository.dart';
+import '../../reviews/presentation/write_review_sheet.dart';
 import '../data/reservation_models.dart';
-import 'book_screen.dart';
+import 'reservation_providers.dart';
 
-final myReservationsProvider =
-    FutureProvider.autoDispose<List<ReservationSummary>>((ref) async {
-  final session = ref.watch(sessionControllerProvider);
-  if (!session.isAuthenticated) return const [];
-  return ref.watch(reservationRepositoryProvider).mine();
+final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
+  return PaymentRepository(ref.watch(apiClientProvider));
 });
 
 class BookingsScreen extends ConsumerWidget {
@@ -51,10 +52,9 @@ class BookingsScreen extends ConsumerWidget {
             )
           : async.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Text(
-                  e is AppFailure ? e.message.tr() : 'error_unknown'.tr(),
-                ),
+              error: (e, _) => RezeraErrorView(
+                error: e,
+                onRetry: () => ref.invalidate(myReservationsProvider),
               ),
               data: (items) {
                 if (items.isEmpty) {
@@ -76,6 +76,12 @@ class BookingsScreen extends ConsumerWidget {
                         onCancel: item.canCancel
                             ? () => _cancel(context, ref, item.id)
                             : null,
+                        onReview: item.canReview
+                            ? () => _review(context, ref, item)
+                            : null,
+                        onPay: item.canPayOnline
+                            ? () => _pay(context, ref, item)
+                            : null,
                       );
                     },
                   ),
@@ -83,6 +89,56 @@ class BookingsScreen extends ConsumerWidget {
               },
             ),
     );
+  }
+
+  Future<void> _review(
+    BuildContext context,
+    WidgetRef ref,
+    ReservationSummary item,
+  ) async {
+    final ok = await showWriteReviewSheet(
+      context,
+      ref,
+      reservationId: item.id,
+      businessName: item.businessName,
+    );
+    if (ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('reviews_thanks'.tr())),
+      );
+    }
+  }
+
+  Future<void> _pay(
+    BuildContext context,
+    WidgetRef ref,
+    ReservationSummary item,
+  ) async {
+    try {
+      final payment = await ref.read(paymentRepositoryProvider).createForReservation(
+            reservationId: item.id,
+            provider: 'mock',
+          );
+      final synced = await ref
+          .read(paymentRepositoryProvider)
+          .show(payment.id, sync: true);
+      ref.invalidate(myReservationsProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'bookings_paid_status'.tr(args: [synced.status]),
+            ),
+          ),
+        );
+      }
+    } on AppFailure catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message.tr())),
+        );
+      }
+    }
   }
 
   Future<void> _cancel(
@@ -128,10 +184,17 @@ class BookingsScreen extends ConsumerWidget {
 }
 
 class _ReservationTile extends StatelessWidget {
-  const _ReservationTile({required this.reservation, this.onCancel});
+  const _ReservationTile({
+    required this.reservation,
+    this.onCancel,
+    this.onReview,
+    this.onPay,
+  });
 
   final ReservationSummary reservation;
   final VoidCallback? onCancel;
+  final VoidCallback? onReview;
+  final VoidCallback? onPay;
 
   @override
   Widget build(BuildContext context) {
@@ -177,31 +240,75 @@ class _ReservationTile extends StatelessWidget {
               style: theme.textTheme.bodyMedium,
             ),
           ],
+          if (reservation.paymentStatus != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'payment_status_${reservation.paymentStatus}'.tr(),
+              style: theme.textTheme.labelMedium,
+            ),
+          ],
+          if (reservation.promoCode != null)
+            Text('book_promo_used'.tr(args: [reservation.promoCode!])),
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(
-                '#${reservation.reservationNumber}',
-                style: theme.textTheme.labelMedium,
+              Expanded(
+                child: Text(
+                  '#${reservation.reservationNumber}',
+                  style: theme.textTheme.labelMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
-              if (reservation.totalAmount != null)
-                Text(
-                  MoneyFormat.uzs(reservation.totalAmount),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+              if (reservation.totalAmount != null) ...[
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    MoneyFormat.uzs(reservation.totalAmount),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
                   ),
                 ),
+              ],
             ],
           ),
-          if (onCancel != null) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: onCancel,
-                child: Text('bookings_cancel_action'.tr()),
-              ),
+          if (onCancel != null || onReview != null || onPay != null) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 4,
+              runSpacing: 0,
+              alignment: WrapAlignment.end,
+              children: [
+                if (onPay != null)
+                  TextButton(
+                    onPressed: onPay,
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    child: Text('bookings_pay_mock'.tr()),
+                  ),
+                if (onReview != null)
+                  TextButton(
+                    onPressed: onReview,
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    child: Text('reviews_write_action'.tr()),
+                  ),
+                if (onCancel != null)
+                  TextButton(
+                    onPressed: onCancel,
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    child: Text('bookings_cancel_action'.tr()),
+                  ),
+              ],
             ),
           ],
         ],

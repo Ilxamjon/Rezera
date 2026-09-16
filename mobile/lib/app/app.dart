@@ -2,7 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/navigation/deep_link_listener.dart';
 import '../core/theme/rezera_theme.dart';
+import '../core/widgets/connectivity_banner.dart';
 import '../features/auth/presentation/session_controller.dart';
 import 'router.dart';
 
@@ -17,13 +19,18 @@ class _RezeraAppState extends ConsumerState<RezeraApp> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      await ref.read(sessionControllerProvider.notifier).bootstrap();
+    // Never block first frame on auth/locale — splash hangs otherwise.
+    Future<void>(() async {
+      try {
+        await ref.read(sessionControllerProvider.notifier).bootstrap();
+      } catch (_) {}
       if (!mounted) return;
-      final code = ref.read(sessionControllerProvider).user?.locale;
-      if (code == 'uz' || code == 'ru') {
-        await context.setLocale(Locale(code!));
-      }
+      try {
+        final code = ref.read(sessionControllerProvider).user?.locale;
+        if (code == 'uz' || code == 'ru') {
+          await context.setLocale(Locale(code!));
+        }
+      } catch (_) {}
     });
   }
 
@@ -39,6 +46,17 @@ class _RezeraAppState extends ConsumerState<RezeraApp> {
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
+      builder: (context, child) {
+        return DeepLinkListener(
+          router: router,
+          child: Column(
+            children: [
+              const ConnectivityBanner(),
+              Expanded(child: child ?? const SizedBox.shrink()),
+            ],
+          ),
+        );
+      },
     );
   }
 }

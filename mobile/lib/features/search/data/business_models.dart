@@ -1,3 +1,5 @@
+import '../../../core/formatters/formatters.dart';
+
 class BusinessCard {
   const BusinessCard({
     required this.id,
@@ -13,6 +15,7 @@ class BusinessCard {
     this.ratingAverage,
     this.ratingCount = 0,
     this.isFavorite,
+    this.distanceKm,
   });
 
   final String id;
@@ -28,6 +31,7 @@ class BusinessCard {
   final double? ratingAverage;
   final int ratingCount;
   final bool? isFavorite;
+  final double? distanceKm;
 
   factory BusinessCard.fromJson(Map<String, dynamic> json) {
     final category = json['category'];
@@ -37,17 +41,24 @@ class BusinessCard {
       name: json['name'] as String? ?? '',
       shortDescription: json['short_description'] as String?,
       coverImageUrl: json['cover_image_url'] as String?,
-      categoryName: category is Map ? category['name'] as String? : null,
+      categoryName: category is Map
+          ? localizedApiString(
+              category['localized_name'] ?? category['name'],
+            )
+          : null,
       city: json['city'] as String?,
       district: json['district'] as String?,
-      priceFrom: json['price_from'] as int?,
+      priceFrom: asApiInt(json['price_from']),
       currency: json['currency'] as String? ?? 'UZS',
       openNow: json['open_now'] as bool?,
       ratingAverage: rating is Map && rating['average'] != null
           ? (rating['average'] as num).toDouble()
           : null,
-      ratingCount: rating is Map ? (rating['count'] as int? ?? 0) : 0,
+      ratingCount: rating is Map ? (asApiInt(rating['count']) ?? 0) : 0,
       isFavorite: json['is_favorite'] as bool?,
+      distanceKm: json['distance_km'] != null
+          ? (json['distance_km'] as num).toDouble()
+          : null,
     );
   }
 }
@@ -66,6 +77,7 @@ class BusinessDetail {
     this.openNow,
     this.ratingAverage,
     this.ratingCount = 0,
+    this.isFavorite,
     this.resources = const [],
   });
 
@@ -81,6 +93,7 @@ class BusinessDetail {
   final bool? openNow;
   final double? ratingAverage;
   final int ratingCount;
+  final bool? isFavorite;
   final List<PublicResource> resources;
 
   factory BusinessDetail.fromJson(Map<String, dynamic> json) {
@@ -95,12 +108,13 @@ class BusinessDetail {
       addressLine: json['address_line'] as String?,
       phone: json['phone'] as String?,
       coverImageUrl: json['cover_image_url'] as String?,
-      priceFrom: json['price_from'] as int?,
+      priceFrom: asApiInt(json['price_from']),
       openNow: json['open_now'] as bool?,
       ratingAverage: rating is Map && rating['average'] != null
           ? (rating['average'] as num).toDouble()
           : null,
-      ratingCount: rating is Map ? (rating['count'] as int? ?? 0) : 0,
+      ratingCount: rating is Map ? (asApiInt(rating['count']) ?? 0) : 0,
+      isFavorite: json['is_favorite'] as bool?,
       resources: resources is List
           ? resources
               .whereType<Map>()

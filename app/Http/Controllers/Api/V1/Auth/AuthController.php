@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Actions\Auth\AuthenticateUserAction;
 use App\Actions\Auth\LogoutUserAction;
 use App\Actions\Auth\RegisterUserAction;
+use App\Actions\Auth\RequestPhoneOtpAction;
+use App\Actions\Auth\VerifyPhoneOtpAction;
 use App\Domain\Businesses\Enums\BusinessMemberStatus;
 use App\Http\Controllers\Api\V1\BaseApiController;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
+use App\Http\Requests\Api\V1\Auth\RequestOtpRequest;
+use App\Http\Requests\Api\V1\Auth\VerifyOtpRequest;
 use App\Http\Resources\Api\V1\AuthTokenResource;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
@@ -52,6 +56,37 @@ class AuthController extends BaseApiController
         return $this->success(
             new AuthTokenResource($result),
             __('auth.login_successful'),
+        );
+    }
+
+    public function requestOtp(RequestOtpRequest $request, RequestPhoneOtpAction $requestOtp): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $result = $requestOtp->execute(
+            phone: $validated['phone'],
+            purpose: $validated['purpose'] ?? 'login',
+            ip: $request->ip(),
+        );
+
+        return $this->success($result, __('auth.otp_sent'));
+    }
+
+    public function verifyOtp(VerifyOtpRequest $request, VerifyPhoneOtpAction $verifyOtp): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $result = $verifyOtp->execute(
+            phone: $validated['phone'],
+            code: $validated['code'],
+            deviceName: $validated['device_name'] ?? 'mobile',
+            name: $validated['name'] ?? null,
+            purpose: $validated['purpose'] ?? 'login',
+        );
+
+        return $this->success(
+            new AuthTokenResource($result),
+            $result['created'] ? __('auth.registration_successful') : __('auth.login_successful'),
         );
     }
 

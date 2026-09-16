@@ -61,12 +61,30 @@ lib/
 
 Owner APIs use `/api/v1/manage/businesses/{id}/…`.
 
-## Notifications (Phase 8)
+## Notifications (Phase 8+)
 
-- In-app inbox: `/notifications` (bell on Home/Profile, unread badge on Profile / More)
+- In-app inbox: `/notifications` (bell on Home/Profile, unread badge)
 - Device row registered on login (`POST /api/v1/me/devices`); deactivated on logout
-- Confirm/reject already create in-app + optional FCM on the API
-- OS push: add FlutterFire (`firebase_messaging`) and client Google config files, then send `push_token` on device register. Backend FCM is ready (`NOTIFICATION_PUSH_DRIVER=fcm`).
+- Confirm/cancel create in-app (+ push when enabled on API)
+- Reservation reminders: `php artisan reservations:send-reminders` (scheduled every 5 minutes). Config: `REZERA_RESERVATION_REMINDER_MINUTES` (default 60)
+- Deep links: `rezera://bookings`, `rezera://reservation/{id}`, `rezera://owner/today` (Android/iOS + `app_links`)
+- Inbox / push payload: `openNotificationDeepLink` (+ optional `data.deep_link`)
+- OS push (optional): add FlutterFire (`firebase_messaging`) + `google-services.json` / `GoogleService-Info.plist`, then call `DeviceRepository.updatePushToken(fcmToken)`. Backend: `NOTIFICATION_PUSH_ENABLED=true`, `NOTIFICATION_PUSH_DRIVER=fcm`, service account env.
+
+## Reliability
+
+- Dio GET retry on timeouts / 5xx (`RetryInterceptor`)
+- Offline banner (`connectivity_plus`)
+- Short discovery cache via `shared_preferences` (stale OK on `NetworkFailure`)
+- Sentry (optional): `--dart-define=SENTRY_DSN=https://...`
+- Store / privacy checklist: `../docs/STORE_LISTING.md`, policy at `https://<API_HOST>/privacy`
+
+## Favorites / reviews / nearby / rules
+
+- Favorites: heart on home & detail, list at `/favorites`
+- Reviews: list on business detail; write from completed bookings
+- Nearby: Home “Yaqin” chip → GPS + `?latitude&longitude&sort=nearest`
+- Owner booking rules: More → Bron qoidalari (`/owner/reservation-rules`); shown on book screen
 
 ## APK
 

@@ -15,6 +15,7 @@ class DeviceRepository {
 
   Future<void> register({String? pushToken}) async {
     final deviceId = await _storage.localDeviceId();
+    final storedToken = pushToken ?? await _storage.readPushToken();
     final response = await _api.post<Map<String, dynamic>>(
       '/me/devices',
       data: {
@@ -22,13 +23,30 @@ class DeviceRepository {
         'platform': _platform(),
         'app_version': AppConfig.appVersion,
         'locale': _apiLocale(),
-        if (pushToken != null && pushToken.isNotEmpty) 'push_token': pushToken,
+        if (storedToken != null && storedToken.isNotEmpty)
+          'push_token': storedToken,
       },
     );
     final data = response.data?['data'];
     final id = data is Map ? data['id'] : null;
     if (id is String && id.isNotEmpty) {
       await _storage.writeServerDeviceId(id);
+    }
+  }
+
+  /// Persist FCM token locally and PATCH the registered device when possible.
+  Future<void> updatePushToken(String token) async {
+    if (token.isEmpty) return;
+    await _storage.writePushToken(token);
+    final serverId = await _storage.readServerDeviceId();
+    if (serverId == null || serverId.isEmpty) return;
+    try {
+      await _api.patch<Map<String, dynamic>>(
+        '/me/devices/$serverId',
+        data: {'push_token': token},
+      );
+    } catch (_) {
+      // Registration may happen on next login.
     }
   }
 
@@ -51,7 +69,8 @@ class DeviceRepository {
   }
 
   String _apiLocale() {
-    final code = Intl.getCurrentLocale().split(RegExp('[_-]')).first.toLowerCase();
+    final code =
+        Intl.getCurrentLocale().split(RegExp('[_-]')).first.toLowerCase();
     if (code == 'uz' || code == 'kaa' || code == 'ru') return code;
     return 'ru';
   }

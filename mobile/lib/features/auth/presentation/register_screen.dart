@@ -80,8 +80,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
             children: [
+              Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.asset(
+                    'assets/branding/logo.png',
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 'app_name'.tr(),
+                textAlign: TextAlign.center,
                 style: theme.textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),

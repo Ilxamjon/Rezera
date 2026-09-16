@@ -3,23 +3,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/otp_login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/auth/presentation/session_controller.dart';
 import '../features/bookings/presentation/book_screen.dart';
 import '../features/bookings/presentation/bookings_screen.dart';
 import '../features/business/presentation/business_detail_screen.dart';
+import '../features/favorites/presentation/favorites_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/notifications/presentation/notifications_screen.dart';
 import '../features/owner/presentation/create_business_wizard_screen.dart';
+import '../features/owner/presentation/owner_business_profile_screen.dart';
+import '../features/owner/presentation/owner_calendar_screen.dart';
 import '../features/owner/presentation/owner_dashboard_screen.dart';
 import '../features/owner/presentation/owner_more_screen.dart';
+import '../features/owner/presentation/owner_promos_screen.dart';
 import '../features/owner/presentation/owner_qr_check_in_screen.dart';
+import '../features/owner/presentation/owner_reservation_rules_screen.dart';
 import '../features/owner/presentation/owner_resource_form_screen.dart';
 import '../features/owner/presentation/owner_resource_qr_screen.dart';
 import '../features/owner/presentation/owner_resources_screen.dart';
+import '../features/owner/presentation/owner_staff_screen.dart';
 import '../features/owner/presentation/owner_today_screen.dart';
+import '../features/owner/presentation/owner_working_hours_screen.dart';
 import '../features/owner/data/owner_models.dart';
 import '../features/profile/presentation/profile_screen.dart';
+import '../features/saved_searches/presentation/saved_searches_screen.dart';
 import 'customer_shell.dart';
 import 'owner_shell.dart';
 
@@ -38,7 +47,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final session = ref.read(sessionControllerProvider);
       final status = session.status;
       final loc = state.matchedLocation;
-      final loggingIn = loc == '/login' || loc == '/register';
+      final loggingIn =
+          loc == '/login' || loc == '/register' || loc == '/login/otp';
       final inOwner = loc.startsWith('/owner');
       final creatingBusiness = loc == '/create-business';
 
@@ -46,7 +56,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      if (creatingBusiness && status != AuthStatus.authenticated) {
+      if ((creatingBusiness || loc == '/saved-searches') &&
+          status != AuthStatus.authenticated) {
         return '/login';
       }
 
@@ -55,7 +66,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (session.isOwnerMode && !inOwner && !loggingIn && !creatingBusiness) {
-        if (loc.startsWith('/book') || loc.startsWith('/business')) {
+        // Keep overlay / shared routes reachable from owner mode.
+        if (loc.startsWith('/book') ||
+            loc.startsWith('/business') ||
+            loc == '/notifications' ||
+            loc == '/favorites' ||
+            loc == '/saved-searches') {
           return null;
         }
         if (loc == '/home' || loc == '/bookings' || loc == '/profile') {
@@ -78,20 +94,31 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/login',
+        parentNavigatorKey: _rootKey,
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
-        path: '/register',
-        builder: (context, state) => const RegisterScreen(),
+        path: '/login/otp',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const OtpLoginScreen(),
       ),
       GoRoute(
+        path: '/register',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      // Overlay routes must use the root navigator so push/pop + system back work
+      // above StatefulShellRoute (otherwise canPop stays false / back exits app).
+      GoRoute(
         path: '/business/:id',
+        parentNavigatorKey: _rootKey,
         builder: (context, state) => BusinessDetailScreen(
           businessId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
         path: '/book/:businessId',
+        parentNavigatorKey: _rootKey,
         builder: (context, state) {
           final extra = state.extra;
           final name = extra is Map && extra['name'] is String
@@ -107,10 +134,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/notifications',
+        parentNavigatorKey: _rootKey,
         builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
+        path: '/favorites',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const FavoritesScreen(),
+      ),
+      GoRoute(
+        path: '/saved-searches',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const SavedSearchesScreen(),
+      ),
+      GoRoute(
         path: '/create-business',
+        parentNavigatorKey: _rootKey,
         builder: (context, state) => const CreateBusinessWizardScreen(),
       ),
       StatefulShellRoute.indexedStack(
@@ -173,11 +212,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'new',
+                    parentNavigatorKey: _rootKey,
                     builder: (context, state) =>
                         const OwnerResourceFormScreen(),
                   ),
                   GoRoute(
                     path: ':resourceId/edit',
+                    parentNavigatorKey: _rootKey,
                     builder: (context, state) {
                       final extra = state.extra;
                       return OwnerResourceFormScreen(
@@ -187,6 +228,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: ':resourceId/qr',
+                    parentNavigatorKey: _rootKey,
                     builder: (context, state) {
                       final extra = state.extra;
                       if (extra is! OwnerResource) {
@@ -213,6 +255,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/owner/check-in/qr',
+        parentNavigatorKey: _rootKey,
         builder: (context, state) {
           final extra = state.extra;
           final map = extra is Map ? extra : const {};
@@ -221,6 +264,36 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             customerName: map['customerName'] as String? ?? 'Guest',
           );
         },
+      ),
+      GoRoute(
+        path: '/owner/reservation-rules',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const OwnerReservationRulesScreen(),
+      ),
+      GoRoute(
+        path: '/owner/working-hours',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const OwnerWorkingHoursScreen(),
+      ),
+      GoRoute(
+        path: '/owner/business-profile',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const OwnerBusinessProfileScreen(),
+      ),
+      GoRoute(
+        path: '/owner/calendar',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const OwnerCalendarScreen(),
+      ),
+      GoRoute(
+        path: '/owner/staff',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const OwnerStaffScreen(),
+      ),
+      GoRoute(
+        path: '/owner/promos',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const OwnerPromosScreen(),
       ),
     ],
   );

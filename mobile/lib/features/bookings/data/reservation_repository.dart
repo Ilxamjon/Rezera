@@ -43,6 +43,7 @@ class ReservationRepository {
     required String startTime,
     required String endTime,
     String? notes,
+    String? promoCode,
   }) async {
     final response = await _api.post<Map<String, dynamic>>(
       '/businesses/$businessId/reservations',
@@ -52,6 +53,7 @@ class ReservationRepository {
         'start_time': startTime,
         'end_time': endTime,
         if (notes != null && notes.isNotEmpty) 'notes': notes,
+        if (promoCode != null && promoCode.isNotEmpty) 'promo_code': promoCode,
       },
       headers: {'Idempotency-Key': _uuid.v4()},
     );

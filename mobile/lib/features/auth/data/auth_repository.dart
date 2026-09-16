@@ -42,6 +42,31 @@ class AuthRepository {
     return AuthTokenPayload.fromJson(_unwrap(response.data));
   }
 
+  Future<OtpRequestResult> requestOtp({required String phone}) async {
+    final response = await _api.post<Map<String, dynamic>>(
+      '/auth/otp/request',
+      data: {'phone': phone, 'purpose': 'login'},
+    );
+    return OtpRequestResult.fromJson(_unwrap(response.data));
+  }
+
+  Future<AuthTokenPayload> verifyOtp({
+    required String phone,
+    required String code,
+    String? name,
+  }) async {
+    final response = await _api.post<Map<String, dynamic>>(
+      '/auth/otp/verify',
+      data: {
+        'phone': phone,
+        'code': code,
+        'device_name': 'mobile',
+        if (name != null && name.isNotEmpty) 'name': name,
+      },
+    );
+    return AuthTokenPayload.fromJson(_unwrap(response.data));
+  }
+
   Future<UserSession> me() async {
     final response = await _api.get<Map<String, dynamic>>('/auth/me');
     return UserSession.fromJson(_unwrap(response.data));

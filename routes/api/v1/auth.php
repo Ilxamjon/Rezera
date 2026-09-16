@@ -9,6 +9,8 @@ Route::prefix('auth')
         Route::middleware('throttle:auth')->group(function (): void {
             Route::post('/register', [AuthController::class, 'register'])->name('register');
             Route::post('/login', [AuthController::class, 'login'])->name('login');
+            Route::post('/otp/request', [AuthController::class, 'requestOtp'])->name('otp.request');
+            Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.verify');
         });
 
         Route::middleware('auth:sanctum')->group(function (): void {

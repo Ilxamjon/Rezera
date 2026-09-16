@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
+import '../../../core/navigation/rezera_nav.dart';
 import '../../../core/theme/rezera_theme.dart';
+import '../../../core/widgets/rezera_error_view.dart';
 import '../../auth/presentation/session_controller.dart';
 import '../data/notification_models.dart';
+import 'notification_deep_link.dart';
 import 'notification_providers.dart';
 
 class NotificationsScreen extends ConsumerWidget {
@@ -21,6 +24,10 @@ class NotificationsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('notifications_title'.tr()),
+        leading: rezeraBackButton(
+          context,
+          fallback: session.isOwnerMode ? '/owner/more' : '/profile',
+        ),
         actions: [
           if (session.isAuthenticated)
             TextButton(
@@ -52,10 +59,12 @@ class NotificationsScreen extends ConsumerWidget {
             )
           : async.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Text(
-                  e is AppFailure ? e.message.tr() : 'error_unknown'.tr(),
-                ),
+              error: (e, _) => RezeraErrorView(
+                error: e,
+                onRetry: () {
+                  ref.invalidate(inboxNotificationsProvider);
+                  ref.invalidate(unreadCountProvider);
+                },
               ),
               data: (items) {
                 if (items.isEmpty) {
@@ -114,17 +123,11 @@ class NotificationsScreen extends ConsumerWidget {
 
     if (!context.mounted) return;
     final session = ref.read(sessionControllerProvider);
-    if (item.isBusinessOps && session.isOwnerMode) {
-      context.go('/owner/today');
-      return;
-    }
-    if (item.reservationId != null) {
-      if (session.isOwnerMode) {
-        context.go('/owner/today');
-      } else {
-        context.go('/bookings');
-      }
-    }
+    openNotificationDeepLink(
+      GoRouter.of(context),
+      item,
+      session: session,
+    );
   }
 }
 

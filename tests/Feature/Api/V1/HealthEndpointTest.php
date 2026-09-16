@@ -19,6 +19,7 @@ class HealthEndpointTest extends TestCase
                     'service' => 'Rezera',
                     'version' => 'v1',
                 ],
-            ]);
+            ])
+            ->assertJsonPath('data.checks.database.ok', true);
     }
 }

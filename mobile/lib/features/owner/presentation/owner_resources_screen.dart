@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/errors/app_failure.dart';
 import '../../../core/formatters/formatters.dart';
 import '../../../core/theme/rezera_theme.dart';
+import '../../../core/widgets/rezera_error_view.dart';
 import 'owner_providers.dart';
 
 class OwnerResourcesScreen extends ConsumerWidget {
@@ -30,8 +30,9 @@ class OwnerResourcesScreen extends ConsumerWidget {
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text(e is AppFailure ? e.message.tr() : 'error_unknown'.tr()),
+        error: (e, _) => RezeraErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(ownerResourcesProvider),
         ),
         data: (items) {
           if (items.isEmpty) {
@@ -74,13 +75,10 @@ class OwnerResourcesScreen extends ConsumerWidget {
                                     item.categoryName!,
                                     style: theme.textTheme.bodySmall,
                                   ),
-                                if (item.status != null)
-                                  Text(
-                                    item.status!,
-                                    style: theme.textTheme.labelLarge?.copyWith(
-                                      color: RezeraColors.seafoam,
-                                    ),
-                                  ),
+                                if (item.status != null) ...[
+                                  const SizedBox(height: 6),
+                                  _ResourceStatusBadge(status: item.status!),
+                                ],
                               ],
                             ),
                           ),
@@ -112,6 +110,41 @@ class OwnerResourcesScreen extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _ResourceStatusBadge extends StatelessWidget {
+  const _ResourceStatusBadge({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final key = 'owner_status_$status';
+    final label = key.tr();
+    final color = switch (status) {
+      'active' => RezeraColors.seafoam,
+      'maintenance' => RezeraColors.amber,
+      'inactive' => RezeraColors.slate,
+      _ => RezeraColors.slate,
+    };
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label == key ? status : label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
       ),
     );
   }

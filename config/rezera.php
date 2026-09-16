@@ -39,6 +39,11 @@ return [
         'occupying_statuses' => ['pending', 'confirmed', 'checked_in'],
     ],
 
+    'notifications' => [
+        // Remind customers this many minutes before confirmed start_at (UTC window).
+        'reminder_minutes_before' => (int) env('REZERA_RESERVATION_REMINDER_MINUTES', 60),
+    ],
+
     'availability' => [
         'max_duration_minutes' => (int) env('REZERA_AVAILABILITY_MAX_DURATION_MINUTES', 1440),
     ],
@@ -59,6 +64,12 @@ return [
         'max_businesses_per_scan' => (int) env('REZERA_SAVED_SEARCHES_MAX_BUSINESSES_PER_SCAN', 20),
         'alert_retention_days' => (int) env('REZERA_SAVED_SEARCH_ALERT_RETENTION_DAYS', 90),
         'scheduler_minutes' => (int) env('REZERA_SAVED_SEARCHES_SCHEDULER_MINUTES', 5),
+    ],
+
+    'otp' => [
+        'ttl_seconds' => (int) env('REZERA_OTP_TTL_SECONDS', 300),
+        'max_attempts' => (int) env('REZERA_OTP_MAX_ATTEMPTS', 5),
+        'expose_debug_code' => (bool) env('REZERA_OTP_EXPOSE_DEBUG_CODE', false),
     ],
 
 ];

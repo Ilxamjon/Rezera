@@ -38,6 +38,8 @@ Mobile-first booking and reservation platform for Uzbekistan. This repository co
 | [docs/CHECK_IN_CHECK_OUT.md](docs/CHECK_IN_CHECK_OUT.md) | QR check-in, check-out & on-site operations |
 | [docs/BETA_LAUNCH.md](docs/BETA_LAUNCH.md) | Phase 10 beta launch runbook |
 | [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) | Production deploy, workers, backups |
+| [docs/DOCKER_DEPLOY.md](docs/DOCKER_DEPLOY.md) | Docker Compose server (VPS / local) |
+| [docs/STORE_LISTING.md](docs/STORE_LISTING.md) | Play/App Store assets, privacy, deep links |
 | [docs/PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md) | Pre-launch / go-no-go checklist |
 | [docs/OWNER_TRAINING_RU.md](docs/OWNER_TRAINING_RU.md) | Owner training sheet (Russian) |
 | [docs/SECURITY.md](docs/SECURITY.md) | Security architecture notes |

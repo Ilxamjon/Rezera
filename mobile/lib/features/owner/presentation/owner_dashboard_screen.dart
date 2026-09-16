@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/errors/app_failure.dart';
 import '../../../core/formatters/formatters.dart';
 import '../../../core/theme/rezera_theme.dart';
+import '../../../core/widgets/rezera_error_view.dart';
 import '../../auth/presentation/session_controller.dart';
 import 'owner_providers.dart';
 
@@ -70,9 +70,8 @@ class OwnerDashboardScreen extends ConsumerWidget {
                     padding: EdgeInsets.only(top: 48),
                     child: Center(child: CircularProgressIndicator()),
                   ),
-                  error: (e, _) => _ErrorBox(
-                    message:
-                        e is AppFailure ? e.message.tr() : 'error_unknown'.tr(),
+                  error: (e, _) => RezeraErrorView(
+                    error: e,
                     onRetry: () => ref.invalidate(ownerDashboardProvider),
                   ),
                   data: (dash) {
@@ -110,13 +109,35 @@ class OwnerDashboardScreen extends ConsumerWidget {
                               label: 'owner_stat_sessions'.tr(),
                               value: '${dash.activeSessions}',
                             ),
-                            if (dash.revenuePaid != null)
+                            _StatChip(
+                              label: 'owner_stat_revenue'.tr(),
+                              value: MoneyFormat.uzs(dash.revenuePaid ?? 0),
+                            ),
+                            if (dash.occupancyPercent != null)
                               _StatChip(
-                                label: 'owner_stat_revenue'.tr(),
-                                value: MoneyFormat.uzs(dash.revenuePaid),
+                                label: 'owner_stat_occupancy'.tr(),
+                                value:
+                                    '${dash.occupancyPercent!.round()}%',
+                              ),
+                            if (dash.resources.total > 0)
+                              _StatChip(
+                                label: 'owner_stat_resources'.tr(),
+                                value:
+                                    '${dash.resources.occupied}/${dash.resources.available + dash.resources.occupied}',
                               ),
                           ],
                         ),
+                        if (dash.resources.maintenance > 0) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            'owner_resources_maintenance_count'.tr(
+                              args: ['${dash.resources.maintenance}'],
+                            ),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: RezeraColors.onInk.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
                         if (dash.overdueCheckIns > 0) ...[
                           const SizedBox(height: 14),
                           Container(
@@ -135,6 +156,29 @@ class OwnerDashboardScreen extends ConsumerWidget {
                             ),
                           ),
                         ],
+                        const SizedBox(height: 20),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            FilledButton.tonalIcon(
+                              onPressed: () =>
+                                  context.push('/owner/calendar'),
+                              icon: const Icon(Icons.calendar_month_outlined),
+                              label: Text('owner_nav_calendar'.tr()),
+                            ),
+                            FilledButton.tonalIcon(
+                              onPressed: () => context.go('/owner/today'),
+                              icon: const Icon(Icons.today_outlined),
+                              label: Text('owner_nav_today'.tr()),
+                            ),
+                            FilledButton.tonalIcon(
+                              onPressed: () => context.go('/owner/resources'),
+                              icon: const Icon(Icons.grid_view_rounded),
+                              label: Text('owner_nav_resources'.tr()),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 24),
                         Row(
                           children: [
@@ -263,24 +307,6 @@ class _StatChip extends StatelessWidget {
           Text(label, style: Theme.of(context).textTheme.labelMedium),
         ],
       ),
-    );
-  }
-}
-
-class _ErrorBox extends StatelessWidget {
-  const _ErrorBox({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(message),
-        const SizedBox(height: 12),
-        FilledButton(onPressed: onRetry, child: Text('home_retry'.tr())),
-      ],
     );
   }
 }

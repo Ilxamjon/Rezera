@@ -152,6 +152,134 @@ class OwnerRepository {
     return OwnerReservation.fromJson(_unwrap(response.data));
   }
 
+  Future<OwnerReservation> markPaidAtVenue({
+    required String businessId,
+    required String reservationId,
+  }) async {
+    final response = await _api.post<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/reservations/$reservationId/mark-paid',
+    );
+    return OwnerReservation.fromJson(_unwrap(response.data));
+  }
+
+  Future<List<WorkingHourDay>> workingHours(String businessId) async {
+    final response = await _api.get<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/working-hours',
+    );
+    return _collection(response.data)
+        .map(WorkingHourDay.fromJson)
+        .toList();
+  }
+
+  Future<List<WorkingHourDay>> updateWorkingHours({
+    required String businessId,
+    required List<Map<String, dynamic>> workingHours,
+  }) async {
+    final response = await _api.put<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/working-hours',
+      data: {'working_hours': workingHours},
+    );
+    return _collection(response.data)
+        .map(WorkingHourDay.fromJson)
+        .toList();
+  }
+
+  Future<BusinessProfile> businessProfile(String businessId) async {
+    final response = await _api.get<Map<String, dynamic>>(
+      '/manage/businesses/$businessId',
+    );
+    return BusinessProfile.fromJson(_unwrap(response.data));
+  }
+
+  Future<BusinessProfile> updateBusinessProfile({
+    required String businessId,
+    required Map<String, dynamic> payload,
+  }) async {
+    final response = await _api.patch<Map<String, dynamic>>(
+      '/manage/businesses/$businessId',
+      data: payload,
+    );
+    return BusinessProfile.fromJson(_unwrap(response.data));
+  }
+
+  Future<OwnerCalendarDay> calendarDay({
+    required String businessId,
+    required String date,
+  }) async {
+    final response = await _api.get<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/calendar/day',
+      queryParameters: {'date': date},
+    );
+    return OwnerCalendarDay.fromJson(_unwrap(response.data));
+  }
+
+  Future<List<StaffMember>> members(String businessId) async {
+    final response = await _api.get<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/members',
+    );
+    return _collection(response.data).map(StaffMember.fromJson).toList();
+  }
+
+  Future<StaffMember> updateMember({
+    required String businessId,
+    required String memberId,
+    required String memberRole,
+    String? jobTitle,
+  }) async {
+    final response = await _api.patch<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/members/$memberId',
+      data: {
+        'member_role': memberRole,
+        'job_title': ?jobTitle,
+      },
+    );
+    return StaffMember.fromJson(_unwrap(response.data));
+  }
+
+  Future<void> removeMember({
+    required String businessId,
+    required String memberId,
+  }) async {
+    await _api.delete<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/members/$memberId',
+    );
+  }
+
+  Future<List<StaffInvitation>> invitations(String businessId) async {
+    final response = await _api.get<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/invitations',
+    );
+    return _collection(response.data)
+        .map(StaffInvitation.fromJson)
+        .toList();
+  }
+
+  Future<StaffInvitation> inviteMember({
+    required String businessId,
+    required String phone,
+    required String memberRole,
+    String? jobTitle,
+  }) async {
+    final response = await _api.post<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/invitations',
+      data: {
+        'phone': phone,
+        'member_role': memberRole,
+        if (jobTitle != null && jobTitle.isNotEmpty) 'job_title': jobTitle,
+      },
+    );
+    return StaffInvitation.fromJson(_unwrap(response.data));
+  }
+
+  Future<void> revokeInvitation({
+    required String businessId,
+    required String invitationId,
+  }) async {
+    await _api.delete<Map<String, dynamic>>(
+      '/manage/businesses/$businessId/invitations/$invitationId',
+    );
+  }
+
   Map<String, dynamic> _unwrap(Map<String, dynamic>? body) {
     if (body == null) throw StateError('Empty API body');
     final data = body['data'];
@@ -168,5 +296,16 @@ class OwnerRepository {
         .whereType<Map>()
         .map((e) => Map<String, dynamic>.from(e))
         .toList();
+  }
+
+  List<Map<String, dynamic>> _collection(Map<String, dynamic>? body) {
+    final data = body?['data'];
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+    return _items(body);
   }
 }

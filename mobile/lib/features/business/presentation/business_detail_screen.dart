@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/errors/app_failure.dart';
 import '../../../core/formatters/formatters.dart';
+import '../../../core/navigation/rezera_nav.dart';
 import '../../../core/theme/rezera_theme.dart';
+import '../../../core/widgets/rezera_error_view.dart';
+import '../../favorites/presentation/favorite_toggle_button.dart';
 import '../../home/presentation/home_screen.dart';
+import '../../reviews/presentation/business_reviews_section.dart';
 import '../../search/data/business_models.dart';
 
 final businessDetailProvider =
@@ -25,13 +28,26 @@ class BusinessDetailScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('app_name'.tr())),
+      appBar: AppBar(
+        title: Text('app_name'.tr()),
+        leading: rezeraBackButton(context),
+        actions: [
+          async.maybeWhen(
+            data: (business) => FavoriteToggleButton(
+              businessId: business.id,
+              isFavorite: business.isFavorite ?? false,
+              onChanged: (_) =>
+                  ref.invalidate(businessDetailProvider(businessId)),
+            ),
+            orElse: () => const SizedBox.shrink(),
+          ),
+        ],
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text(
-            e is AppFailure ? e.message.tr() : 'error_unknown'.tr(),
-          ),
+        error: (e, _) => RezeraErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(businessDetailProvider(businessId)),
         ),
         data: (business) {
           return ListView(
@@ -122,6 +138,8 @@ class BusinessDetailScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+              const SizedBox(height: 24),
+              BusinessReviewsSection(businessId: business.id),
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () {

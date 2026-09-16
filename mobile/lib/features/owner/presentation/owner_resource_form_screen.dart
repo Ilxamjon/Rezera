@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
+import '../../../core/navigation/rezera_nav.dart';
 import '../../../core/theme/rezera_theme.dart';
 import '../data/owner_models.dart';
 import 'owner_providers.dart';
@@ -168,6 +169,7 @@ class _OwnerResourceFormScreenState
               ? 'owner_resource_edit'.tr()
               : 'owner_resource_add'.tr(),
         ),
+        leading: rezeraBackButton(context, fallback: '/owner/resources'),
         actions: [
           if (widget.isEdit)
             IconButton(

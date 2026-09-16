@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../config/app_config.dart';
 import '../errors/app_failure.dart';
 import '../storage/token_storage.dart';
+import 'retry_interceptor.dart';
 
 typedef UnauthorizedHandler = Future<void> Function();
 
@@ -28,6 +29,7 @@ class ApiClient {
                 },
               ),
             ) {
+    _dio.interceptors.add(RetryInterceptor());
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {

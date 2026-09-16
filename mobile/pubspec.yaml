@@ -20,9 +20,14 @@ dependencies:
   intl: ^0.20.2
   uuid: ^4.6.0
   collection: ^1.19.1
-  google_fonts: ^8.2.1
-  mobile_scanner: ^7.4.0
+  # 7.x pulls dart-lang jni; arm64 libdartjni.so was missing and broke all plugins.
+  mobile_scanner: ^5.2.3
   qr_flutter: ^4.1.0
+  geolocator: ^14.0.2
+  sentry_flutter: ^9.6.0
+  app_links: ^6.4.0
+  shared_preferences: ^2.5.3
+  connectivity_plus: ^6.1.4
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +38,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/translations/
+    - assets/branding/

@@ -11,6 +11,7 @@ use App\Events\Businesses\BusinessVerificationApproved;
 use App\Exceptions\Businesses\BusinessVerificationException;
 use App\Models\BusinessVerification;
 use App\Models\User;
+use App\Services\Businesses\BusinessOnboardingService;
 use App\Services\Businesses\BusinessReadinessService;
 use App\Services\Businesses\BusinessVerificationTransitionService;
 use Illuminate\Http\Request;
@@ -51,11 +52,14 @@ final class ApproveBusinessVerificationAction
             $business->update([
                 'verification_status' => BusinessVerificationStatus::Verified,
                 'status' => BusinessStatus::Approved,
+                'is_publicly_listed' => true,
                 'reviewed_at' => now(),
                 'reviewed_by_user_id' => $actor->id,
                 'rejection_reason' => null,
                 'verification_note' => null,
             ]);
+
+            app(BusinessOnboardingService::class)->sync($business->fresh());
 
             $this->audit->execute(
                 action: 'business.verification_approved',

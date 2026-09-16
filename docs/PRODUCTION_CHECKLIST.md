@@ -78,11 +78,14 @@ Use this checklist before every production deployment.
 
 ## Monitoring
 
-- [ ] Health endpoint monitored: `GET /api/v1/health`
+- [ ] Health endpoint monitored: `GET /api/v1/health` (alert on non-200 / `degraded`)
+- [ ] `SENTRY_LARAVEL_DSN` receiving events from staging/production
+- [ ] Mobile `SENTRY_DSN` set for release builds ([STORE_LISTING.md](STORE_LISTING.md))
 - [ ] Queue failure alerts
 - [ ] Database connection and disk alerts
 - [ ] 5xx error rate alerts
 - [ ] Scheduler last-run monitoring
+- [ ] Privacy page live: `/privacy`
 
 ## Post-deploy smoke test
 

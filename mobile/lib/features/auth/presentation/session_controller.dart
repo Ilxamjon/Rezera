@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
@@ -70,13 +72,16 @@ class SessionController extends StateNotifier<SessionState> {
 
   Future<void> bootstrap() async {
     try {
-      final token = await _tokens.readToken();
+      final token = await _tokens.readToken().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => null,
+      );
       if (token == null || token.isEmpty) {
         state = const SessionState(status: AuthStatus.guest);
         return;
       }
 
-      final user = await _auth.me();
+      final user = await _auth.me().timeout(const Duration(seconds: 8));
       state = SessionState(
         status: AuthStatus.authenticated,
         user: user,

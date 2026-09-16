@@ -19,59 +19,70 @@ class OwnerShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _onTap,
-        backgroundColor: RezeraColors.ink,
-        indicatorColor: RezeraColors.amber.withValues(alpha: 0.35),
-        destinations: [
-          NavigationDestination(
-            icon: Icon(
-              Icons.dashboard_outlined,
-              color: RezeraColors.onInk.withValues(alpha: 0.7),
+    final atRootTab = navigationShell.currentIndex == 0;
+
+    return PopScope(
+      canPop: atRootTab,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (!atRootTab) {
+          navigationShell.goBranch(0);
+        }
+      },
+      child: Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: navigationShell.currentIndex,
+          onDestinationSelected: _onTap,
+          backgroundColor: RezeraColors.ink,
+          indicatorColor: RezeraColors.amber.withValues(alpha: 0.35),
+          destinations: [
+            NavigationDestination(
+              icon: Icon(
+                Icons.dashboard_outlined,
+                color: RezeraColors.onInk.withValues(alpha: 0.7),
+              ),
+              selectedIcon: const Icon(
+                Icons.dashboard_rounded,
+                color: RezeraColors.amber,
+              ),
+              label: 'owner_nav_dashboard'.tr(),
             ),
-            selectedIcon: const Icon(
-              Icons.dashboard_rounded,
-              color: RezeraColors.amber,
+            NavigationDestination(
+              icon: Icon(
+                Icons.today_outlined,
+                color: RezeraColors.onInk.withValues(alpha: 0.7),
+              ),
+              selectedIcon: const Icon(
+                Icons.today_rounded,
+                color: RezeraColors.amber,
+              ),
+              label: 'owner_nav_today'.tr(),
             ),
-            label: 'owner_nav_dashboard'.tr(),
-          ),
-          NavigationDestination(
-            icon: Icon(
-              Icons.today_outlined,
-              color: RezeraColors.onInk.withValues(alpha: 0.7),
+            NavigationDestination(
+              icon: Icon(
+                Icons.desktop_windows_outlined,
+                color: RezeraColors.onInk.withValues(alpha: 0.7),
+              ),
+              selectedIcon: const Icon(
+                Icons.desktop_windows_rounded,
+                color: RezeraColors.amber,
+              ),
+              label: 'owner_nav_resources'.tr(),
             ),
-            selectedIcon: const Icon(
-              Icons.today_rounded,
-              color: RezeraColors.amber,
+            NavigationDestination(
+              icon: ProfileNavIcon(
+                outlined: true,
+                color: RezeraColors.onInk.withValues(alpha: 0.7),
+              ),
+              selectedIcon: const ProfileNavIcon(
+                outlined: false,
+                color: RezeraColors.amber,
+              ),
+              label: 'owner_nav_more'.tr(),
             ),
-            label: 'owner_nav_today'.tr(),
-          ),
-          NavigationDestination(
-            icon: Icon(
-              Icons.desktop_windows_outlined,
-              color: RezeraColors.onInk.withValues(alpha: 0.7),
-            ),
-            selectedIcon: const Icon(
-              Icons.desktop_windows_rounded,
-              color: RezeraColors.amber,
-            ),
-            label: 'owner_nav_resources'.tr(),
-          ),
-          NavigationDestination(
-            icon: ProfileNavIcon(
-              outlined: true,
-              color: RezeraColors.onInk.withValues(alpha: 0.7),
-            ),
-            selectedIcon: const ProfileNavIcon(
-              outlined: false,
-              color: RezeraColors.amber,
-            ),
-            label: 'owner_nav_more'.tr(),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

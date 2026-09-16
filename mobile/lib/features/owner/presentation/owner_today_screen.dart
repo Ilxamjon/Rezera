@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/formatters/formatters.dart';
 import '../../../core/theme/rezera_theme.dart';
+import '../../../core/widgets/rezera_error_view.dart';
 import '../data/owner_models.dart';
 import 'owner_providers.dart';
 
@@ -20,8 +21,9 @@ class OwnerTodayScreen extends ConsumerWidget {
       appBar: AppBar(title: Text('owner_today_list_title'.tr())),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text(e is AppFailure ? e.message.tr() : 'error_unknown'.tr()),
+        error: (e, _) => RezeraErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(ownerTodayProvider),
         ),
         data: (items) {
           if (items.isEmpty) {
@@ -41,6 +43,9 @@ class OwnerTodayScreen extends ConsumerWidget {
                   onCheckIn: () => _runCheckIn(context, ref, item),
                   onQrCheckIn: () => _runQrCheckIn(context, ref, item),
                   onCheckOut: () => _runCheckOut(context, ref, item),
+                  onMarkPaid: item.canMarkPaid
+                      ? () => _runMarkPaid(context, ref, item)
+                      : null,
                 );
               },
             ),
@@ -153,6 +158,33 @@ class OwnerTodayScreen extends ConsumerWidget {
       }
     }
   }
+  Future<void> _runMarkPaid(
+    BuildContext context,
+    WidgetRef ref,
+    OwnerReservation item,
+  ) async {
+    final businessId = ref.read(selectedBusinessIdProvider);
+    if (businessId == null) return;
+    try {
+      await ref.read(ownerRepositoryProvider).markPaidAtVenue(
+            businessId: businessId,
+            reservationId: item.id,
+          );
+      ref.invalidate(ownerTodayProvider);
+      ref.invalidate(ownerDashboardProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('owner_marked_paid'.tr())),
+        );
+      }
+    } on AppFailure catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message.tr())),
+        );
+      }
+    }
+  }
 }
 
 class _OwnerReservationCard extends StatelessWidget {
@@ -162,6 +194,7 @@ class _OwnerReservationCard extends StatelessWidget {
     required this.onCheckIn,
     required this.onQrCheckIn,
     required this.onCheckOut,
+    this.onMarkPaid,
   });
 
   final OwnerReservation reservation;
@@ -169,6 +202,7 @@ class _OwnerReservationCard extends StatelessWidget {
   final VoidCallback onCheckIn;
   final VoidCallback onQrCheckIn;
   final VoidCallback onCheckOut;
+  final VoidCallback? onMarkPaid;
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +251,11 @@ class _OwnerReservationCard extends StatelessWidget {
               ),
             ),
           ],
+          if (reservation.paymentStatus != null)
+            Text(
+              'payment_status_${reservation.paymentStatus}'.tr(),
+              style: theme.textTheme.labelMedium,
+            ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -252,6 +291,11 @@ class _OwnerReservationCard extends StatelessWidget {
                 FilledButton(
                   onPressed: onCheckOut,
                   child: Text('owner_action_check_out'.tr()),
+                ),
+              if (onMarkPaid != null)
+                OutlinedButton(
+                  onPressed: onMarkPaid,
+                  child: Text('owner_action_mark_paid'.tr()),
                 ),
             ],
           ),

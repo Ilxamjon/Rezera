@@ -94,3 +94,20 @@ class AuthTokenPayload {
     );
   }
 }
+
+class OtpRequestResult {
+  const OtpRequestResult({
+    required this.expiresIn,
+    this.debugCode,
+  });
+
+  final int expiresIn;
+  final String? debugCode;
+
+  factory OtpRequestResult.fromJson(Map<String, dynamic> json) {
+    return OtpRequestResult(
+      expiresIn: (json['expires_in'] as num?)?.toInt() ?? 300,
+      debugCode: json['debug_code'] as String?,
+    );
+  }
+}

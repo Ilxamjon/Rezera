@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Rezera visual system — slate + amber, not purple-default AI chrome.
+///
+/// Uses platform fonts (no Google Fonts runtime fetch). Fetching Sora/Manrope
+/// on first frame hung the Android splash when fonts.gstatic.com was slow/blocked.
 abstract final class RezeraColors {
   static const ink = Color(0xFF14181F);
   static const slate = Color(0xFF1E2530);
@@ -15,9 +17,6 @@ abstract final class RezeraColors {
 }
 
 ThemeData buildRezeraTheme() {
-  final display = GoogleFonts.soraTextTheme();
-  final body = GoogleFonts.manropeTextTheme();
-
   final base = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
@@ -34,40 +33,42 @@ ThemeData buildRezeraTheme() {
     scaffoldBackgroundColor: RezeraColors.mist,
   );
 
+  final text = base.textTheme;
+
   return base.copyWith(
-    textTheme: body.copyWith(
-      displayLarge: display.displayLarge?.copyWith(
+    textTheme: text.copyWith(
+      displayLarge: text.displayLarge?.copyWith(
         fontWeight: FontWeight.w700,
         color: RezeraColors.ink,
         letterSpacing: -1.2,
       ),
-      displayMedium: display.displayMedium?.copyWith(
+      displayMedium: text.displayMedium?.copyWith(
         fontWeight: FontWeight.w700,
         color: RezeraColors.ink,
       ),
-      headlineLarge: display.headlineLarge?.copyWith(
+      headlineLarge: text.headlineLarge?.copyWith(
         fontWeight: FontWeight.w700,
         color: RezeraColors.ink,
         letterSpacing: -0.8,
       ),
-      headlineMedium: display.headlineMedium?.copyWith(
+      headlineMedium: text.headlineMedium?.copyWith(
         fontWeight: FontWeight.w600,
         color: RezeraColors.ink,
       ),
-      titleLarge: display.titleLarge?.copyWith(
+      titleLarge: text.titleLarge?.copyWith(
         fontWeight: FontWeight.w600,
         color: RezeraColors.ink,
       ),
-      bodyLarge: body.bodyLarge?.copyWith(height: 1.45),
-      bodyMedium: body.bodyMedium?.copyWith(height: 1.4),
-      labelLarge: body.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      bodyLarge: text.bodyLarge?.copyWith(height: 1.45),
+      bodyMedium: text.bodyMedium?.copyWith(height: 1.4),
+      labelLarge: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: RezeraColors.mist,
       foregroundColor: RezeraColors.ink,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: display.titleLarge?.copyWith(
+      titleTextStyle: text.titleLarge?.copyWith(
         fontWeight: FontWeight.w700,
         color: RezeraColors.ink,
       ),
@@ -95,18 +96,18 @@ ThemeData buildRezeraTheme() {
         foregroundColor: RezeraColors.onInk,
         minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        textStyle: body.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+        textStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: RezeraColors.seafoam,
-        textStyle: body.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+        textStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: RezeraColors.sand,
-      labelStyle: body.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+      labelStyle: text.labelMedium?.copyWith(fontWeight: FontWeight.w600),
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       padding: const EdgeInsets.symmetric(horizontal: 8),

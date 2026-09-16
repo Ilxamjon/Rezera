@@ -28,3 +28,28 @@ abstract final class PhoneFormat {
     return digits.isEmpty ? raw.trim() : '+$digits';
   }
 }
+
+/// API may return a plain string or an i18n map `{uz, ru, ...}`.
+String? localizedApiString(dynamic value) {
+  if (value == null) return null;
+  if (value is String) return value;
+  if (value is Map) {
+    final map = Map<String, dynamic>.from(value);
+    for (final key in ['uz', 'ru', 'en', 'kaa']) {
+      final v = map[key];
+      if (v is String && v.trim().isNotEmpty) return v;
+    }
+    for (final v in map.values) {
+      if (v is String && v.trim().isNotEmpty) return v;
+    }
+  }
+  return null;
+}
+
+int? asApiInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}

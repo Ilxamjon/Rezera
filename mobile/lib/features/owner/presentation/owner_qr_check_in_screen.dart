@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/errors/app_failure.dart';
+import '../../../core/navigation/rezera_nav.dart';
 import '../../../core/theme/rezera_theme.dart';
 import 'owner_providers.dart';
 
@@ -105,6 +106,7 @@ class _OwnerQrCheckInScreenState extends ConsumerState<OwnerQrCheckInScreen> {
         backgroundColor: RezeraColors.ink,
         foregroundColor: RezeraColors.onInk,
         title: Text('owner_qr_scan_title'.tr()),
+        leading: rezeraBackButton(context, fallback: '/owner/today'),
       ),
       body: Column(
         children: [

@@ -7,6 +7,8 @@ use App\Domain\Businesses\Enums\BusinessMemberStatus;
 use App\Domain\Identity\Enums\Locale;
 use App\Domain\Identity\Enums\PlatformRole;
 use App\Domain\Identity\Enums\UserStatus;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,7 +18,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, HasUuids, Notifiable, SoftDeletes;
@@ -66,6 +68,11 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status?->canAuthenticate() === true;
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->isPlatformStaff() && $this->isActive();
     }
 
     public function businessMemberships(): HasMany

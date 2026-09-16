@@ -177,6 +177,9 @@ Route::middleware('auth:sanctum')
         Route::patch('/businesses/{business}/reservations/{reservation}', [ManageReservationController::class, 'updateStatus'])
             ->name('businesses.reservations.update-status');
 
+        Route::post('/businesses/{business}/reservations/{reservation}/mark-paid', [ManageReservationController::class, 'markPaidAtVenue'])
+            ->name('businesses.reservations.mark-paid');
+
         Route::post('/businesses/{business}/reservations/{reservation}/cancel', [ManageReservationController::class, 'cancel'])
             ->name('businesses.reservations.cancel');
 

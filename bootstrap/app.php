@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('saved-searches:cleanup-alerts')->daily();
         $schedule->command('subscriptions:process-lifecycle')->hourly();
         $schedule->command('reservations:expire-pending')->everyMinute();
+        $schedule->command('reservations:send-reminders')->everyFiveMinutes();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [

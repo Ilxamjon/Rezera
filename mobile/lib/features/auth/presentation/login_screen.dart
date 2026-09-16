@@ -77,8 +77,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
             children: [
+              Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Image.asset(
+                    'assets/branding/logo.png',
+                    width: 88,
+                    height: 88,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
               Text(
                 'app_name'.tr(),
+                textAlign: TextAlign.center,
                 style: theme.textTheme.displayMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: -1.4,
@@ -87,6 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 8),
               Text(
                 'tagline'.tr(),
+                textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: RezeraColors.slate.withValues(alpha: 0.75),
                 ),
@@ -145,6 +159,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     : Text('auth_login_action'.tr()),
               ),
               const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => context.push('/login/otp'),
+                child: Text('auth_otp_title'.tr()),
+              ),
               TextButton(
                 onPressed: () => context.go('/register'),
                 child: Text('auth_no_account'.tr()),

@@ -67,6 +67,21 @@ class ProfileScreen extends ConsumerWidget {
           if (session.isAuthenticated) ...[
             ListTile(
               contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.favorite_outline_rounded),
+              title: Text('favorites_title'.tr()),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/favorites'),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.notifications_active_outlined),
+              title: Text('saved_search_title'.tr()),
+              subtitle: Text('saved_search_hint_short'.tr()),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/saved-searches'),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.notifications_outlined),
               title: Text('notifications_title'.tr()),
               trailing: const Icon(Icons.chevron_right_rounded),

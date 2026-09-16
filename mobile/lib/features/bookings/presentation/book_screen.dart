@@ -5,15 +5,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/formatters/formatters.dart';
-import '../../../core/network/api_client.dart';
+import '../../../core/navigation/rezera_nav.dart';
 import '../../../core/theme/rezera_theme.dart';
 import '../../auth/presentation/session_controller.dart';
+import '../../owner/data/reservation_settings_repository.dart';
+import '../../owner/presentation/owner_reservation_rules_screen.dart';
+import '../../promos/data/promo_repository.dart';
+import '../../promos/presentation/promo_providers.dart';
 import '../data/reservation_models.dart';
-import '../data/reservation_repository.dart';
-
-final reservationRepositoryProvider = Provider<ReservationRepository>((ref) {
-  return ReservationRepository(ref.watch(apiClientProvider));
-});
+import 'reservation_providers.dart';
 
 class BookScreen extends ConsumerStatefulWidget {
   const BookScreen({
@@ -40,16 +40,37 @@ class _BookScreenState extends ConsumerState<BookScreen> {
   bool _checking = false;
   bool _submitting = false;
   String? _error;
+  ReservationRules? _rules;
+  final _promoCode = TextEditingController();
+  PromoValidation? _promo;
+  bool _validatingPromo = false;
 
   String get _dateStr => DateFormat('yyyy-MM-dd').format(_date);
   String _fmt(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
   @override
+  void dispose() {
+    _promoCode.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _selectedResourceId = widget.preselectedResourceId;
-    Future.microtask(_checkAvailability);
+    Future.microtask(() async {
+      await Future.wait([_checkAvailability(), _loadRules()]);
+    });
+  }
+
+  Future<void> _loadRules() async {
+    try {
+      final rules = await ref
+          .read(reservationSettingsRepositoryProvider)
+          .publicRules(widget.businessId);
+      if (mounted) setState(() => _rules = rules);
+    } catch (_) {}
   }
 
   Future<void> _pickDate() async {
@@ -113,6 +134,40 @@ class _BookScreenState extends ConsumerState<BookScreen> {
     }
   }
 
+  Future<void> _applyPromo() async {
+    if (_selectedResourceId == null || _promoCode.text.trim().isEmpty) return;
+    setState(() {
+      _validatingPromo = true;
+      _error = null;
+    });
+    try {
+      final result = await ref.read(promoRepositoryProvider).validate(
+            businessId: widget.businessId,
+            code: _promoCode.text.trim(),
+            resourceId: _selectedResourceId!,
+            date: _dateStr,
+            startTime: _fmt(_start),
+            endTime: _fmt(_end),
+          );
+      setState(() => _promo = result);
+      if (!result.valid) {
+        setState(() => _error = 'book_promo_invalid'.tr());
+      }
+    } on AppFailure catch (e) {
+      setState(() {
+        _promo = null;
+        _error = e.message.tr();
+      });
+    } catch (_) {
+      setState(() {
+        _promo = null;
+        _error = 'error_unknown'.tr();
+      });
+    } finally {
+      if (mounted) setState(() => _validatingPromo = false);
+    }
+  }
+
   Future<void> _submit() async {
     final session = ref.read(sessionControllerProvider);
     if (!session.isAuthenticated) {
@@ -136,8 +191,12 @@ class _BookScreenState extends ConsumerState<BookScreen> {
                 date: _dateStr,
                 startTime: _fmt(_start),
                 endTime: _fmt(_end),
+                promoCode: (_promo?.valid == true)
+                    ? _promoCode.text.trim()
+                    : null,
               );
       if (!mounted) return;
+      ref.invalidate(myReservationsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -164,7 +223,10 @@ class _BookScreenState extends ConsumerState<BookScreen> {
     final available = _rows.where((r) => r.isAvailable).toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text('business_book'.tr())),
+      appBar: AppBar(
+        title: Text('business_book'.tr()),
+        leading: rezeraBackButton(context),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -174,6 +236,30 @@ class _BookScreenState extends ConsumerState<BookScreen> {
               fontWeight: FontWeight.w800,
             ),
           ),
+          if (_rules != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: RezeraColors.sand),
+              ),
+              child: Text(
+                'book_rules_summary'.tr(
+                  namedArgs: {
+                    'min': '${_rules!.minDurationMinutes ?? 60}',
+                    'cancel': '${_rules!.cancellationDeadlineMinutes ?? 60}',
+                    'grace': '${_rules!.noShowGraceMinutes ?? 15}',
+                  },
+                ),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: RezeraColors.slate.withValues(alpha: 0.85),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
           _PickerTile(
             label: 'book_date'.tr(),
@@ -279,6 +365,32 @@ class _BookScreenState extends ConsumerState<BookScreen> {
               _error!,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: RezeraColors.danger,
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          TextField(
+            controller: _promoCode,
+            decoration: InputDecoration(
+              labelText: 'book_promo_code'.tr(),
+              suffixIcon: TextButton(
+                onPressed: _validatingPromo ? null : _applyPromo,
+                child: Text('book_promo_apply'.tr()),
+              ),
+            ),
+          ),
+          if (_promo?.valid == true) ...[
+            const SizedBox(height: 8),
+            Text(
+              'book_promo_applied'.tr(
+                namedArgs: {
+                  'discount': MoneyFormat.uzs(_promo!.discountAmount),
+                  'total': MoneyFormat.uzs(_promo!.total),
+                },
+              ),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: RezeraColors.seafoam,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

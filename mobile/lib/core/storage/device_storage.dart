@@ -8,6 +8,7 @@ class DeviceStorage {
 
   static const _deviceKey = 'rezera_device_id';
   static const _serverDeviceKey = 'rezera_server_device_id';
+  static const _pushTokenKey = 'rezera_push_token';
 
   final FlutterSecureStorage _storage;
   final _uuid = const Uuid();
@@ -28,6 +29,13 @@ class DeviceStorage {
       _storage.write(key: _serverDeviceKey, value: id);
 
   Future<void> clearServerDeviceId() => _storage.delete(key: _serverDeviceKey);
+
+  Future<String?> readPushToken() => _storage.read(key: _pushTokenKey);
+
+  Future<void> writePushToken(String token) =>
+      _storage.write(key: _pushTokenKey, value: token);
+
+  Future<void> clearPushToken() => _storage.delete(key: _pushTokenKey);
 }
 
 final deviceStorageProvider = Provider<DeviceStorage>((ref) => DeviceStorage());

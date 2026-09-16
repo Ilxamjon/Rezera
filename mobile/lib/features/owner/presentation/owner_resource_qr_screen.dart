@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/errors/app_failure.dart';
+import '../../../core/navigation/rezera_nav.dart';
 import '../../../core/theme/rezera_theme.dart';
 import '../data/owner_models.dart';
 import 'owner_providers.dart';
@@ -52,7 +53,10 @@ class _OwnerResourceQrScreenState extends ConsumerState<OwnerResourceQrScreen> {
     final payload = _payload;
 
     return Scaffold(
-      appBar: AppBar(title: Text('owner_resource_qr'.tr())),
+      appBar: AppBar(
+        title: Text('owner_resource_qr'.tr()),
+        leading: rezeraBackButton(context, fallback: '/owner/resources'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

@@ -17,5 +17,6 @@ return [
     'payment_not_found_for_webhook' => 'Payment could not be matched for webhook event.',
     'created' => 'Payment created successfully.',
     'auto_confirm_after_payment' => 'Reservation confirmed after successful payment.',
+    'marked_paid_at_venue' => 'Marked as paid at venue.',
     'date_range_too_large' => 'Date range cannot exceed :days days.',
 ];

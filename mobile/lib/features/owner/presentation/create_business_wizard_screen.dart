@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/formatters/formatters.dart';
+import '../../../core/navigation/rezera_nav.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/rezera_theme.dart';
 import '../../auth/presentation/session_controller.dart';
@@ -227,8 +228,12 @@ class _CreateBusinessWizardScreenState
         );
         try {
           await repo.submitVerification(businessId);
-        } catch (_) {
-          // Onboarding may still need platform review; resource is enough for ops.
+        } on AppFailure catch (e) {
+          setState(() {
+            _submitting = false;
+            _error = e.message;
+          });
+          return;
         }
         await ref.read(sessionControllerProvider.notifier).refreshUser(
               selectBusinessId: businessId,
@@ -273,106 +278,121 @@ class _CreateBusinessWizardScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final canStepBack = _step > 0 && _step < 3;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('biz_create_title'.tr()),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
+    return PopScope(
+      // System/gesture back: step back inside the wizard, else leave the route.
+      canPop: !canStepBack,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _goBack();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('biz_create_title'.tr()),
+          leading: IconButton(
+            icon: Icon(canStepBack ? Icons.arrow_back_rounded : Icons.close),
+            onPressed: () {
+              if (canStepBack) {
+                _goBack();
+              } else {
+                rezeraPop(context, fallback: '/owner/more');
+              }
+            },
+          ),
         ),
-      ),
-      body: _loadingCats
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  child: Row(
-                    children: List.generate(4, (i) {
-                      final active = i <= _step;
-                      return Expanded(
-                        child: Container(
-                          height: 4,
-                          margin: EdgeInsets.only(right: i < 3 ? 6 : 0),
-                          decoration: BoxDecoration(
-                            color: active
-                                ? RezeraColors.ink
-                                : RezeraColors.mist,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                if (_error != null)
+        body: _loadingCats
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    child: Text(
-                      _error!.tr(),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: RezeraColors.danger,
-                      ),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: Row(
+                      children: List.generate(4, (i) {
+                        final active = i <= _step;
+                        return Expanded(
+                          child: Container(
+                            height: 4,
+                            margin: EdgeInsets.only(right: i < 3 ? 6 : 0),
+                            decoration: BoxDecoration(
+                              color: active
+                                  ? RezeraColors.ink
+                                  : RezeraColors.mist,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        );
+                      }),
                     ),
                   ),
-                Expanded(
-                  child: PageView(
-                    controller: _page,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      _buildProfileStep(theme),
-                      _buildHoursStep(theme),
-                      _buildResourceStep(theme),
-                      _buildDoneStep(theme),
-                    ],
-                  ),
-                ),
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                    child: Row(
-                      children: [
-                        if (_step > 0 && _step < 3)
-                          OutlinedButton(
-                            onPressed: _submitting ? null : _goBack,
-                            child: Text('biz_back'.tr()),
-                          ),
-                        if (_step > 0 && _step < 3) const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: _submitting
-                                ? null
-                                : () {
-                                    if (_step == 3) {
-                                      context.go('/owner/dashboard');
-                                      return;
-                                    }
-                                    _goNext();
-                                  },
-                            child: _submitting
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Text(
-                                    _step == 3
-                                        ? 'biz_open_owner'.tr()
-                                        : (_step == 2
-                                            ? 'biz_finish'.tr()
-                                            : 'biz_next'.tr()),
-                                  ),
-                          ),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: Text(
+                        _error!.tr(),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: RezeraColors.danger,
                         ),
+                      ),
+                    ),
+                  Expanded(
+                    child: PageView(
+                      controller: _page,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildProfileStep(theme),
+                        _buildHoursStep(theme),
+                        _buildResourceStep(theme),
+                        _buildDoneStep(theme),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                      child: Row(
+                        children: [
+                          if (_step > 0 && _step < 3)
+                            OutlinedButton(
+                              onPressed: _submitting ? null : _goBack,
+                              child: Text('biz_back'.tr()),
+                            ),
+                          if (_step > 0 && _step < 3) const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: _submitting
+                                  ? null
+                                  : () {
+                                      if (_step == 3) {
+                                        context.go('/owner/dashboard');
+                                        return;
+                                      }
+                                      _goNext();
+                                    },
+                              child: _submitting
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      _step == 3
+                                          ? 'biz_open_owner'.tr()
+                                          : (_step == 2
+                                              ? 'biz_finish'.tr()
+                                              : 'biz_next'.tr()),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 

@@ -83,7 +83,16 @@ final class SubmitBusinessVerificationAction
 
             DB::afterCommit(fn () => BusinessVerificationSubmitted::dispatch($verification->fresh(['business'])));
 
-            return $verification->fresh(['business', 'submittedBy']);
+            $fresh = $verification->fresh(['business', 'submittedBy']);
+
+            if (config('business_onboarding.auto_publish_on_verification_submit', false)) {
+                return app(ApproveBusinessVerificationAction::class)->execute(
+                    $fresh,
+                    $actor,
+                );
+            }
+
+            return $fresh;
         });
     }
 }

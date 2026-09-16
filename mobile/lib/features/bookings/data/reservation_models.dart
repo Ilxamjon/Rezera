@@ -1,3 +1,5 @@
+import '../../../core/formatters/formatters.dart';
+
 class ReservationSummary {
   const ReservationSummary({
     required this.id,
@@ -14,6 +16,9 @@ class ReservationSummary {
     this.endTime,
     this.totalAmount,
     this.currency = 'UZS',
+    this.paymentStatus,
+    this.discountAmount,
+    this.promoCode,
   });
 
   final String id;
@@ -30,9 +35,19 @@ class ReservationSummary {
   final String? endTime;
   final int? totalAmount;
   final String currency;
+  final String? paymentStatus;
+  final int? discountAmount;
+  final String? promoCode;
 
   bool get canCancel =>
       status == 'pending' || status == 'confirmed';
+
+  bool get canReview => status == 'completed';
+
+  bool get canPayOnline =>
+      (paymentStatus == 'pay_at_venue' || paymentStatus == 'unpaid') &&
+      (status == 'pending' || status == 'confirmed') &&
+      (totalAmount ?? 0) > 0;
 
   String get scheduleLabel {
     if (date != null && startTime != null && endTime != null) {
@@ -44,6 +59,7 @@ class ReservationSummary {
   factory ReservationSummary.fromJson(Map<String, dynamic> json) {
     final business = json['business'];
     final resource = json['resource'];
+    final promo = json['promo'];
     return ReservationSummary(
       id: json['id'] as String,
       reservationNumber:
@@ -58,8 +74,11 @@ class ReservationSummary {
       date: json['date'] as String?,
       startTime: json['start_time'] as String?,
       endTime: json['end_time'] as String?,
-      totalAmount: json['total_amount'] as int?,
+      totalAmount: asApiInt(json['total_amount']),
       currency: json['currency'] as String? ?? 'UZS',
+      paymentStatus: json['payment_status'] as String?,
+      discountAmount: asApiInt(json['discount_amount']),
+      promoCode: promo is Map ? promo['code'] as String? : null,
     );
   }
 }
@@ -90,8 +109,8 @@ class AvailabilityResourceRow {
       code: json['code'] as String?,
       status: json['status'] as String? ?? 'unavailable',
       reason: json['reason'] as String?,
-      hourlyRateAmount: json['hourly_rate_amount'] as int? ??
-          json['price'] as int?,
+      hourlyRateAmount:
+          asApiInt(json['hourly_rate_amount']) ?? asApiInt(json['price']),
     );
   }
 }
