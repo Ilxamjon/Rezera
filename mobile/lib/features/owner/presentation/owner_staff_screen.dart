@@ -67,7 +67,7 @@ class _OwnerStaffScreenState extends ConsumerState<OwnerStaffScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: role,
+                    initialValue: role,
                     decoration:
                         InputDecoration(labelText: 'owner_staff_role'.tr()),
                     items: [
@@ -144,7 +144,7 @@ class _OwnerStaffScreenState extends ConsumerState<OwnerStaffScreen> {
             return AlertDialog(
               title: Text('owner_staff_change_role'.tr()),
               content: DropdownButtonFormField<String>(
-                value: role,
+                initialValue: role,
                 items: [
                   DropdownMenuItem(
                     value: 'staff',
