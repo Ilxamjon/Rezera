@@ -50,7 +50,7 @@ class _OwnerPromosScreenState extends ConsumerState<OwnerPromosScreen> {
                         InputDecoration(labelText: 'owner_promo_name'.tr()),
                   ),
                   DropdownButtonFormField<String>(
-                    value: type,
+                    initialValue: type,
                     items: [
                       DropdownMenuItem(
                         value: 'percentage',
