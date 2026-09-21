@@ -18,6 +18,13 @@ jobs:
     name: Laravel backend
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: rezera
+      DB_USERNAME: rezera
+      DB_PASSWORD: rezera
 
     services:
       postgres:
