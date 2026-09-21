@@ -24,14 +24,14 @@ class ValidationFailure extends AppFailure {
 
 class ConflictFailure extends AppFailure {
   const ConflictFailure([
-    String message = 'error_conflict',
+    super.message = 'error_conflict',
     String? code,
-  ]) : super(message, code: code ?? 'conflict');
+  ]) : super(code: code ?? 'conflict');
 }
 
 class UnknownFailure extends AppFailure {
   const UnknownFailure([
-    String message = 'error_unknown',
+    super.message = 'error_unknown',
     String? code,
-  ]) : super(message, code: code);
+  ]) : super(code: code);
 }

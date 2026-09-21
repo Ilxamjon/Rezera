@@ -64,7 +64,7 @@ class ReservationRepository {
     final response = await _api.get<Map<String, dynamic>>(
       '/me/reservations',
       queryParameters: {
-        if (status != null) 'status': status,
+        'status': ?status,
         'per_page': 50,
       },
     );

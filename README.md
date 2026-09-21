@@ -4,7 +4,7 @@ Mobile-first booking and reservation platform for Uzbekistan. This repository co
 
 ## Stack
 
-- **PHP** 8.2+
+- **PHP** 8.4.1+
 - **Laravel** 11
 - **PostgreSQL** 16+ (required for production)
 - **Laravel Sanctum** (API token authentication)
@@ -46,7 +46,7 @@ Mobile-first booking and reservation platform for Uzbekistan. This repository co
 
 ## Requirements
 
-- PHP 8.2 or newer with extensions: `pdo_pgsql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`
+- PHP 8.4.1 or newer with extensions: `pdo_pgsql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`
 - Composer 2.x
 - PostgreSQL 16+ (local development and tests)
 

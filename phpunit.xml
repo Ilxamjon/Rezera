@@ -34,6 +34,7 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <env name="BUSINESS_AUTO_PUBLISH_ON_VERIFICATION_SUBMIT" value="false"/>
         <env name="BUSINESS_PUBLIC_REQUIRES_VERIFICATION" value="false"/>
         <env name="BUSINESS_PUBLIC_REQUIRES_ONBOARDING_COMPLETE" value="false"/>
         <env name="BUSINESS_RESERVATION_REQUIRES_VERIFICATION" value="false"/>

@@ -144,14 +144,14 @@ class ReservationManagementTest extends PostgresTestCase
             'code' => 'PC-'.Str::upper(Str::random(4)),
         ]);
 
-        $start = CarbonImmutable::parse('2026-09-04 20:00:00', 'Asia/Tashkent')->utc();
-        $end = CarbonImmutable::parse('2026-09-04 22:00:00', 'Asia/Tashkent')->utc();
+        $start = CarbonImmutable::now('Asia/Tashkent')->addDays(2)->setTime(20, 0)->utc();
+        $end = $start->addHours(2);
 
         return Reservation::factory()->forResource($resource)->create([
             'customer_id' => $customer->id,
             'customer_name_snapshot' => $customer->name,
             'customer_phone_snapshot' => $customer->phone,
-            'reservation_number' => 'RZ-20260904-'.fake()->unique()->numerify('######'),
+            'reservation_number' => 'RZ-'.$start->format('Ymd').'-'.fake()->unique()->numerify('######'),
             'start_at' => $start,
             'end_at' => $end,
             'duration_minutes' => 120,

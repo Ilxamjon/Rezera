@@ -1,5 +1,5 @@
 # Rezera API — PHP-FPM production image
-FROM php:8.3-fpm-bookworm
+FROM php:8.4-fpm-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git unzip curl libpq-dev libzip-dev libicu-dev libpng-dev \

@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Laravel backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: rezera
+      DB_USERNAME: rezera
+      DB_PASSWORD: rezera
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: rezera
+          POSTGRES_USER: rezera
+          POSTGRES_PASSWORD: rezera
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rezera -d rezera"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, ctype, fileinfo, intl, mbstring, openssl, pdo_pgsql, tokenizer, xml
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Prepare writable Laravel directories
+        run: mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs
+
+      - name: Install backend dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          PGPASSWORD=rezera psql -h 127.0.0.1 -U rezera -d rezera -c 'CREATE EXTENSION IF NOT EXISTS btree_gist;'
+          php artisan migrate --force
+
+      - name: Check formatting (existing debt is non-blocking)
+        continue-on-error: true
+        run: composer format:test
+
+      - name: Run backend tests
+        run: composer test
+
+  mobile:
+    name: Flutter mobile
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install mobile dependencies
+        run: flutter pub get
+
+      - name: Analyze mobile code
+        run: flutter analyze
+
+      - name: Run mobile tests
+        run: flutter test
