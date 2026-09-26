@@ -16,6 +16,11 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  // Turn on only after a real SMS provider is configured in the API.
+  static const _phoneOtpEnabled = bool.fromEnvironment(
+    'ENABLE_PHONE_OTP',
+    defaultValue: false,
+  );
   final _phone = TextEditingController();
   final _password = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -159,10 +164,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     : Text('auth_login_action'.tr()),
               ),
               const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => context.push('/login/otp'),
-                child: Text('auth_otp_title'.tr()),
-              ),
+              if (_phoneOtpEnabled)
+                TextButton(
+                  onPressed: () => context.push('/login/otp'),
+                  child: Text('auth_otp_title'.tr()),
+                ),
               TextButton(
                 onPressed: () => context.go('/register'),
                 child: Text('auth_no_account'.tr()),
