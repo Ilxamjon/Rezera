@@ -37,18 +37,22 @@ The SMS OTP route is disabled with a mock provider in production; password login
 ## 3. API
 
 Connect `Ilxamjon/Rezera`, repository root `/`, Dockerfile `Dockerfile`.
-The root `railway.json` sets the web start command and `/api/v1/health` check.
+In Railway service settings, select **Dockerfile** as builder, set the start command to
+`rezera-web`, and set the healthcheck path to `/api/v1/health`. New Railway services
+cannot enable the deprecated Config-as-code feature, so `railway.json` is not applied.
 Set `RUN_MIGRATIONS=1` only here, and `CACHE_CONFIG=1`.
 Generate a public Railway domain; set `APP_URL` to it. Set replicas to one.
 The container starts Nginx on Railway's `$PORT` and PHP-FPM internally.
 
 ## 4. Worker and scheduler
 
-Create two more services from the same GitHub repository. In each service's settings,
-set **Railway Config File** to its absolute path in the repository:
+Create two more services from the same GitHub repository and select **Dockerfile** as
+builder for both. Set their custom start commands in Railway's service settings:
 
-- Worker: `/deploy/railway/worker.json`
-- Scheduler: `/deploy/railway/scheduler.json`
+- Worker: `php artisan queue:work database --sleep=1 --tries=3 --timeout=120 --max-time=3600`
+- Scheduler: `php artisan schedule:work`
+
+The JSON files in `deploy/railway/` document these settings for legacy services only.
 
 Set `RUN_MIGRATIONS=0` and `CACHE_CONFIG=0` on both. Do not generate public domains.
 Deploy these after the API migrations have completed. Use one scheduler replica only.
