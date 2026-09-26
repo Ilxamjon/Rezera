@@ -14,6 +14,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  railway_image:
+    name: Railway Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build deploy image
+        run: docker build --tag rezera-railway:ci .
+
   backend:
     name: Laravel backend
     runs-on: ubuntu-latest
