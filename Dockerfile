@@ -2,7 +2,7 @@
 FROM php:8.4-fpm-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git unzip curl libpq-dev libzip-dev libicu-dev libpng-dev \
+        git unzip curl nginx libpq-dev libzip-dev libicu-dev libpng-dev \
         libjpeg62-turbo-dev libfreetype6-dev libonig-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY deploy/docker/php.ini /usr/local/etc/php/conf.d/zz-rezera.ini
+COPY deploy/railway/nginx.conf /etc/nginx/sites-available/default
+COPY deploy/railway/start-web.sh /usr/local/bin/rezera-web
+RUN chmod +x /usr/local/bin/rezera-web
 
 WORKDIR /var/www/html
 
@@ -27,8 +30,8 @@ RUN composer install \
 
 COPY . .
 
-RUN composer dump-autoload --optimize --no-dev \
-    && mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && composer dump-autoload --optimize --no-dev \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache
 

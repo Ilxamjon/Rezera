@@ -14,11 +14,13 @@ if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
   echo "Waiting for database..."
   i=0
   until php -r '
-    $host = getenv("DB_HOST") ?: "postgres";
-    $port = getenv("DB_PORT") ?: "5432";
-    $db = getenv("DB_DATABASE") ?: "rezera";
-    $user = getenv("DB_USERNAME") ?: "rezera";
-    $pass = getenv("DB_PASSWORD") ?: "";
+    $url = getenv("DB_URL") ?: getenv("DATABASE_URL");
+    $parts = $url ? parse_url($url) : [];
+    $host = $parts["host"] ?? (getenv("DB_HOST") ?: "postgres");
+    $port = $parts["port"] ?? (getenv("DB_PORT") ?: "5432");
+    $db = isset($parts["path"]) ? ltrim($parts["path"], "/") : (getenv("DB_DATABASE") ?: "rezera");
+    $user = isset($parts["user"]) ? rawurldecode($parts["user"]) : (getenv("DB_USERNAME") ?: "rezera");
+    $pass = isset($parts["pass"]) ? rawurldecode($parts["pass"]) : (getenv("DB_PASSWORD") ?: "");
     try {
       new PDO("pgsql:host={$host};port={$port};dbname={$db}", $user, $pass, [
         PDO::ATTR_TIMEOUT => 2,
@@ -37,8 +39,8 @@ if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
   done
 
   php artisan migrate --force --no-interaction
-  php artisan db:seed --class=Database\\Seeders\\BusinessCategorySeeder --force --no-interaction || true
-  php artisan db:seed --class=Database\\Seeders\\SubscriptionPlanSeeder --force --no-interaction || true
+  php artisan db:seed --class=Database\\Seeders\\BusinessCategorySeeder --force --no-interaction
+  php artisan db:seed --class=Database\\Seeders\\SubscriptionPlanSeeder --force --no-interaction
 fi
 
 if [ "${CACHE_CONFIG:-1}" = "1" ] && [ -n "${APP_KEY:-}" ]; then

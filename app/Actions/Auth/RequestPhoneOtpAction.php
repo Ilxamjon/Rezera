@@ -20,6 +20,13 @@ class RequestPhoneOtpAction
      */
     public function execute(string $phone, string $purpose = 'login', ?string $ip = null): array
     {
+        // No real SMS driver is implemented yet. A mock must never claim to send login codes.
+        if (app()->environment('production')) {
+            throw ValidationException::withMessages([
+                'phone' => [__('auth.otp_send_failed')],
+            ]);
+        }
+
         $normalized = PhoneNormalizer::normalize($phone);
         $ttl = (int) config('rezera.otp.ttl_seconds', 300);
         $code = (string) random_int(100000, 999999);

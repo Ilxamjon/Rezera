@@ -38,6 +38,7 @@ Mobile-first booking and reservation platform for Uzbekistan. This repository co
 | [docs/CHECK_IN_CHECK_OUT.md](docs/CHECK_IN_CHECK_OUT.md) | QR check-in, check-out & on-site operations |
 | [docs/BETA_LAUNCH.md](docs/BETA_LAUNCH.md) | Phase 10 beta launch runbook |
 | [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) | Production deploy, workers, backups |
+| [docs/RAILWAY_DEPLOY.md](docs/RAILWAY_DEPLOY.md) | Railway beta: API, PostgreSQL, worker, scheduler |
 | [docs/DOCKER_DEPLOY.md](docs/DOCKER_DEPLOY.md) | Docker Compose server (VPS / local) |
 | [docs/STORE_LISTING.md](docs/STORE_LISTING.md) | Play/App Store assets, privacy, deep links |
 | [docs/PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md) | Pre-launch / go-no-go checklist |
